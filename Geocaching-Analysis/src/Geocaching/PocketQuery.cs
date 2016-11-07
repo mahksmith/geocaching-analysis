@@ -62,7 +62,7 @@ namespace Geocaching
         {
             if (httpClient != null && url != null)
             {
-                Debug.WriteLine("Downloading Pocket Query " + Name);
+                Debug.WriteLine($"Downloading Pocket Query {Name}");
 
                 var result = httpClient.GetAsync(url);
                 result.Result.EnsureSuccessStatusCode();
@@ -100,7 +100,7 @@ namespace Geocaching
 
         private string GetZipEntry(ZipArchiveEntry entry)
         {
-            Debug.WriteLine("Unzipping " + Name + ": " + entry.Name);
+            Debug.WriteLine($"Unzipping {Name}: {entry.Name}");
 
             return (new System.IO.StreamReader(entry.Open())).ReadToEnd();
         }
