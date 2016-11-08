@@ -33,9 +33,9 @@ namespace Geocaching
             var formContent = new FormUrlEncodedContent(new[]
             {
                     new KeyValuePair<string, string>("__RequestVerificationToken", requestVerificationToken),
-                    new KeyValuePair<string, string>("Username", "***REMOVED***"),
-                    new KeyValuePair<string, string>("Password", "***REMOVED***")
-                });
+                    new KeyValuePair<string, string>("Username", System.Configuration.ConfigurationManager.AppSettings["GeocachingUsername"]),
+                    new KeyValuePair<string, string>("Password", System.Configuration.ConfigurationManager.AppSettings["GeocachingPassword"])
+            });
 
             Debug.WriteLine("Logging in..");
             var task = client.PostAsync("/account/login?returnUrl=%2fpocket%2f", formContent);
