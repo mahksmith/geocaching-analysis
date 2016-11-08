@@ -20,36 +20,20 @@ namespace Geocaching
                 client = new HttpClient(handler) { BaseAddress = baseAddress };
             }
 
-
-            Debug.WriteLine("Accessing Pocket Query Login..");
-            var pageResult = client.GetAsync("/account/login?returnUrl=%2Fpocket%2F");
-            pageResult.Result.EnsureSuccessStatusCode();
-
-            Debug.WriteLine("Extracting Form Information..");
-            string requestVerificationToken = extractRequestVerificationToken(pageResult);
-
-            //string needs to be of the form
-            //__RequestVerificationToken=[requestVerificationToken]&Username=[username]&Password=[password]
-            var formContent = new FormUrlEncodedContent(new[]
-            {
-                    new KeyValuePair<string, string>("__RequestVerificationToken", requestVerificationToken),
-                    new KeyValuePair<string, string>("Username", System.Configuration.ConfigurationManager.AppSettings["GeocachingUsername"]),
-                    new KeyValuePair<string, string>("Password", System.Configuration.ConfigurationManager.AppSettings["GeocachingPassword"])
-            });
-
-            Debug.WriteLine("Logging in..");
-            var task = client.PostAsync("/account/login?returnUrl=%2fpocket%2f", formContent);
-
-            var read = task.Result.Content.ReadAsStringAsync();
-
-            HtmlAgilityPack.HtmlDocument doc = new HtmlAgilityPack.HtmlDocument();
-            doc.Load(task.Result.Content.ReadAsStreamAsync().Result);
+            HtmlAgilityPack.HtmlDocument result = logIn("/account/login?returnUrl=%2Fpocket%2F", client);
 
             //Iterate over each Pocket Query to get the download strings. The fourth one should have the "<a href"
             Debug.WriteLine("Extracting PocketQueries");
-            var rows = doc.GetElementbyId("uxOfflinePQTable").ChildNodes.Where(row => row.Name.Equals("tr"));
+            var table = result.GetElementbyId("uxOfflinePQTable");
+            if (table == null)
+            {
+                //TODO send web extractor status message according to website errors.
+                return null;
+            }
 
 
+            var rows = table.ChildNodes.Where(row => row.Name.Equals("tr"));
+            
             List<PocketQuery> pocketQueries = new List<PocketQuery>();
 
             foreach (var row in rows)
@@ -89,6 +73,35 @@ namespace Geocaching
                 pocketQueries.Add(pocketQuery);
             }
             return pocketQueries;
+        }
+
+        private HtmlAgilityPack.HtmlDocument logIn(string logInPage, HttpClient client)
+        {
+            Debug.WriteLine("Accessing Geocaching Login..");
+            var pageResult = client.GetAsync(logInPage);
+            pageResult.Result.EnsureSuccessStatusCode();
+
+            Debug.WriteLine("Extracting Form Information..");
+            string requestVerificationToken = extractRequestVerificationToken(pageResult);
+
+            //string needs to be of the form
+            //__RequestVerificationToken=[requestVerificationToken]&Username=[username]&Password=[password]
+            var formContent = new FormUrlEncodedContent(new[]
+            {
+                    new KeyValuePair<string, string>("__RequestVerificationToken", requestVerificationToken),
+                    new KeyValuePair<string, string>("Username", System.Configuration.ConfigurationManager.AppSettings["GeocachingUsername"]),
+                    new KeyValuePair<string, string>("Password", System.Configuration.ConfigurationManager.AppSettings["GeocachingPassword"])
+            });
+
+            Debug.WriteLine("Logging in..");
+            var task = client.PostAsync(logInPage, formContent);
+
+            var read = task.Result.Content.ReadAsStringAsync();
+
+            HtmlAgilityPack.HtmlDocument doc = new HtmlAgilityPack.HtmlDocument();
+            doc.Load(task.Result.Content.ReadAsStreamAsync().Result);
+
+            return doc;
         }
 
         private string extractRequestVerificationToken(Task<HttpResponseMessage> pageResult)
