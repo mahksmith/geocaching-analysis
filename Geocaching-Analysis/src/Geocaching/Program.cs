@@ -1,9 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
-using System.Net;
-using System.Net.Http;
 
 namespace Geocaching
 {
@@ -11,12 +8,16 @@ namespace Geocaching
     {
         static void Main(string[] args)
         {
+
             //Check PocketQueries, save any new data.
             List<PocketQuery> queries = new WebExtractorPocketQuery().ExtractPocketQueries().ToList();
 
-            using (var ctx = new DatabaseEntityContext())
+            //var databaseDict = ctx.Geocaches.AsNoTracking().Where(a => true).ToDictionary(a => a.Code);
+
+            foreach (PocketQuery pocketQuery in queries)
             {
-                foreach (PocketQuery pocketQuery in queries)
+                //New Context every query decreases chances of error
+                using (var ctx = new DatabaseEntityContext())
                 {
                     try
                     {
@@ -49,11 +50,11 @@ namespace Geocaching
                 return;
             }
 
-            //Update all geocaches before writing latest PocketQuery version to database to ensure all geocache information was saved first.
+            //TODO I've selected ALL geocache codes, there must be a way to get only those in the PQ.
+            var databaseTest = ctx.Geocaches.AsNoTracking().Select(a => a.Code).Where(a => true).ToList();
             foreach (Geocache cache in pocketQuery.Geocaches)
             {
-                Geocache gc = ctx.Geocaches.AsNoTracking().Where(g => g.Code.Equals(cache.Code)).FirstOrDefault<Geocache>();
-                if (gc != null)
+                if (databaseTest.Contains(cache.Code))
                 {
                     ctx.Geocaches.Attach(cache);
                     ctx.Entry(cache).State = System.Data.Entity.EntityState.Modified;
@@ -65,7 +66,7 @@ namespace Geocaching
             }
 
             if (pq != null)
-            {                
+            {
                 ctx.PocketQueries.Attach(pocketQuery);
                 ctx.Entry(pocketQuery).State = System.Data.Entity.EntityState.Modified;
             }
@@ -73,7 +74,6 @@ namespace Geocaching
             {
                 ctx.PocketQueries.Add(pocketQuery);
             }
-
 
             ctx.SaveChanges();
         }

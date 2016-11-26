@@ -34,7 +34,8 @@ namespace Geocaching
 
                 byte[] bytes = Encoding.ASCII.GetBytes(GpxGeocaches);
                 MemoryStream stream = new MemoryStream(bytes);
-                return _geocaches = GPXReader.ImportGPX(stream);
+                _geocaches = GPXReader.ImportGPX(stream);
+                return _geocaches;
             }
         }
            
