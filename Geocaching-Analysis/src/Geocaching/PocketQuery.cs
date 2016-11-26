@@ -1,7 +1,12 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 using System.Diagnostics;
+using System.IO;
 using System.IO.Compression;
 using System.Net.Http;
+using System.Text;
 
 namespace Geocaching
 {
@@ -9,6 +14,7 @@ namespace Geocaching
     {
         private string _gpxGeocaches;
         private string _gpxWaypoints;
+        private IEnumerable<Geocache> _geocaches;
         private ZipArchive _zip;
 
         private enum FileType
@@ -19,6 +25,19 @@ namespace Geocaching
         public DateTime DateGenerated { get; internal set; }
         public short EntryCount { get; internal set; }
         public string FileSize { get; internal set; }
+        public IEnumerable<Geocache> Geocaches
+        {
+            get
+            {
+                if (_geocaches != null)
+                    return _geocaches;
+
+                byte[] bytes = Encoding.ASCII.GetBytes(GpxGeocaches);
+                MemoryStream stream = new MemoryStream(bytes);
+                return _geocaches = GPXReader.ImportGPX(stream);
+            }
+        }
+           
         public string GpxGeocaches
         {
             get
@@ -42,9 +61,12 @@ namespace Geocaching
             }
         }
 
+        [NotMapped]
         public HttpClient HttpClient { get; internal set; }
+        [Key]
         public string Name { get; internal set; }
         public string Url { get; internal set; }
+        [NotMapped]
         public ZipArchive Zip
         {
             get

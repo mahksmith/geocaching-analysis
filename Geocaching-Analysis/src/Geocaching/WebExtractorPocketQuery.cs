@@ -10,7 +10,7 @@ namespace Geocaching
 {
     public class WebExtractorPocketQuery
     {
-        public List<PocketQuery> ExtractPocketQueries(HttpClient client = null)
+        public IEnumerable<PocketQuery> ExtractPocketQueries(HttpClient client = null)
         {
             if (client == null)
             {
@@ -20,7 +20,7 @@ namespace Geocaching
                 client = new HttpClient(handler) { BaseAddress = baseAddress };
             }
 
-            HtmlAgilityPack.HtmlDocument result = logIn("/account/login?returnUrl=%2Fpocket%2F", client);
+            HtmlAgilityPack.HtmlDocument result = LogIn("/account/login?returnUrl=%2Fpocket%2F", client);
 
             //Iterate over each Pocket Query to get the download strings. The fourth one should have the "<a href"
             Debug.WriteLine("Extracting PocketQueries");
@@ -38,9 +38,10 @@ namespace Geocaching
 
             foreach (var row in rows)
             {
-                PocketQuery pocketQuery = new PocketQuery();
-                pocketQuery.HttpClient = client;
-
+                PocketQuery pocketQuery = new PocketQuery()
+                {
+                    HttpClient = client
+                };
                 var columns = row.ChildNodes.Where(c => c.Name.Equals("td"));
 
                 if (columns.Count() < 6)
@@ -75,14 +76,14 @@ namespace Geocaching
             return pocketQueries;
         }
 
-        private HtmlAgilityPack.HtmlDocument logIn(string logInPage, HttpClient client)
+        private HtmlAgilityPack.HtmlDocument LogIn(string logInPage, HttpClient client)
         {
             Debug.WriteLine("Accessing Geocaching Login..");
             var pageResult = client.GetAsync(logInPage);
             pageResult.Result.EnsureSuccessStatusCode();
 
             Debug.WriteLine("Extracting Form Information..");
-            string requestVerificationToken = extractRequestVerificationToken(pageResult);
+            string requestVerificationToken = ExtractRequestVerificationToken(pageResult);
 
             //string needs to be of the form
             //__RequestVerificationToken=[requestVerificationToken]&Username=[username]&Password=[password]
@@ -93,9 +94,12 @@ namespace Geocaching
                     new KeyValuePair<string, string>("Password", System.Configuration.ConfigurationManager.AppSettings["GeocachingPassword"])
             });
 
+
+            string user = System.Configuration.ConfigurationManager.AppSettings["GeocachingUsername"];
+            string pass = System.Configuration.ConfigurationManager.AppSettings["GeocachingPassword"];
+
             Debug.WriteLine("Logging in..");
             var task = client.PostAsync(logInPage, formContent);
-
             var read = task.Result.Content.ReadAsStringAsync();
 
             HtmlAgilityPack.HtmlDocument doc = new HtmlAgilityPack.HtmlDocument();
@@ -104,7 +108,7 @@ namespace Geocaching
             return doc;
         }
 
-        private string extractRequestVerificationToken(Task<HttpResponseMessage> pageResult)
+        private string ExtractRequestVerificationToken(Task<HttpResponseMessage> pageResult)
         {
             //<input name="__RequestVerificationToken" type="hidden" value="[value]">
             var restest = pageResult.Result.Content.ReadAsStringAsync();

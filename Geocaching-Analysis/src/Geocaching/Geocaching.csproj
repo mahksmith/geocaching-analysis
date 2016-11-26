@@ -49,11 +49,20 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="EntityFramework, Version=6.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089, processorArchitecture=MSIL">
+      <HintPath>..\..\packages\EntityFramework.6.1.3\lib\net45\EntityFramework.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="EntityFramework.SqlServer, Version=6.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089, processorArchitecture=MSIL">
+      <HintPath>..\..\packages\EntityFramework.6.1.3\lib\net45\EntityFramework.SqlServer.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
     <Reference Include="HtmlAgilityPack, Version=1.4.9.5, Culture=neutral, PublicKeyToken=bd319b19eaf3b43a, processorArchitecture=MSIL">
       <HintPath>..\..\packages\HtmlAgilityPack.1.4.9.5\lib\Net45\HtmlAgilityPack.dll</HintPath>
       <Private>True</Private>
     </Reference>
     <Reference Include="System" />
+    <Reference Include="System.ComponentModel.DataAnnotations" />
     <Reference Include="System.configuration" />
     <Reference Include="System.Core" />
     <Reference Include="System.Device" />
@@ -67,8 +76,22 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="DatabaseEntityContext.cs" />
     <Compile Include="Geocache.cs" />
     <Compile Include="GPXReader.cs" />
+    <Compile Include="Migrations\201611250520526_InitialCreate.cs" />
+    <Compile Include="Migrations\201611250520526_InitialCreate.Designer.cs">
+      <DependentUpon>201611250520526_InitialCreate.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Migrations\201611250557285_RemoveUnnecccessaryGeoCoordinateAttributes.cs" />
+    <Compile Include="Migrations\201611250557285_RemoveUnnecccessaryGeoCoordinateAttributes.Designer.cs">
+      <DependentUpon>201611250557285_RemoveUnnecccessaryGeoCoordinateAttributes.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Migrations\201611250600476_CorrectGeocacheKey.cs" />
+    <Compile Include="Migrations\201611250600476_CorrectGeocacheKey.Designer.cs">
+      <DependentUpon>201611250600476_CorrectGeocacheKey.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Migrations\Configuration.cs" />
     <Compile Include="PocketQuery.cs" />
     <Compile Include="WebExtractorPocketQuery.cs" />
     <Compile Include="Program.cs" />
@@ -104,6 +127,17 @@
       <ProductName>.NET Framework 3.5 SP1</ProductName>
       <Install>false</Install>
     </BootstrapperPackage>
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Migrations\201611250520526_InitialCreate.resx">
+      <DependentUpon>201611250520526_InitialCreate.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Migrations\201611250557285_RemoveUnnecccessaryGeoCoordinateAttributes.resx">
+      <DependentUpon>201611250557285_RemoveUnnecccessaryGeoCoordinateAttributes.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Migrations\201611250600476_CorrectGeocacheKey.resx">
+      <DependentUpon>201611250600476_CorrectGeocacheKey.cs</DependentUpon>
+    </EmbeddedResource>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

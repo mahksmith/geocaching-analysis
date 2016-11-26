@@ -1,10 +1,18 @@
-﻿using System.Device.Location;
+﻿using System.ComponentModel.DataAnnotations;
+using System.Device.Location;
 
 namespace Geocaching
 {
     public class Geocache: GeoCoordinate
     {
+        public Geocache()
+        {
+            //Future: maybe we can extract altitudes from Google Maps? Would need to do it if coordinates ever update.
+            Altitude = 0;
+        }
+
         public string CacheID { get; internal set; }
+        [Key]
         public string Code { get; internal set; }
         public string Country { get; internal set; }
         public string Description { get; internal set; }

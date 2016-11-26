@@ -34,10 +34,12 @@ namespace Geocaching
 
             foreach (XElement wpt in doc.Descendants(ns + "wpt"))
             {
-                Geocache geocache = new Geocache();
+                Geocache geocache = new Geocache()
+                {
+                    Latitude = Convert.ToSingle(wpt.Attribute("lat").Value),
+                    Longitude = Convert.ToSingle(wpt.Attribute("lon").Value)
+                };
 
-                geocache.Latitude = Convert.ToSingle(wpt.Attribute("lat").Value);
-                geocache.Longitude = Convert.ToSingle(wpt.Attribute("lon").Value);
                 geocache.GetDistanceTo(geocache);
 
                 geocache.Time = wpt.Element(ns + "time").Value;

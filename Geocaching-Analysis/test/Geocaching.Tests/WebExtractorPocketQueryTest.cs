@@ -23,6 +23,7 @@ namespace Geocaching.Tests
                 Assert.NotNull(pq.FileSize);
                 Assert.NotNull(pq.Name);
                 Assert.NotNull(pq.Url);
+                Assert.NotNull(pq.HttpClient);
             }
 
             //Also do integration tests unzipping and file stuff. 
