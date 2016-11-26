@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Xml.Linq;
 
 namespace Geocaching
@@ -7,6 +8,10 @@ namespace Geocaching
     public class GPXReader
     {
         private string path;
+
+        private static XNamespace ns = "http://www.topografix.com/GPX/1/0",
+                                  gs = "http://www.groundspeak.com/cache/1/0/1";
+
         public GPXReader(string path)
         {
             this.path = path;
@@ -27,10 +32,9 @@ namespace Geocaching
 
         private static IEnumerable<Geocache> ImportGPX(XDocument doc)
         {
-            XNamespace ns = "http://www.topografix.com/GPX/1/0";
-            XNamespace gs = "http://www.groundspeak.com/cache/1/0/1";
-
             List<Geocache> geocaches = new List<Geocache>();
+
+            DateTime datePocketQueryGenerated = GetGenerationDate(doc);
 
             foreach (XElement wpt in doc.Descendants(ns + "wpt"))
             {
@@ -40,7 +44,7 @@ namespace Geocaching
                     Longitude = Convert.ToSingle(wpt.Attribute("lon").Value)
                 };
 
-                geocache.GetDistanceTo(geocache);
+                geocache.LastChanged = datePocketQueryGenerated;
 
                 geocache.Time = wpt.Element(ns + "time").Value;
                 geocache.Code = wpt.Element(ns + "name").Value;
@@ -76,6 +80,11 @@ namespace Geocaching
             }
 
             return geocaches;
+        }
+
+        public static DateTime GetGenerationDate(XDocument doc)
+        {
+            return DateTime.Parse(doc.Descendants(ns + "time").First().Value);
         }
     }
 }

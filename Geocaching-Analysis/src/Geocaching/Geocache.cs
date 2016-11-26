@@ -1,4 +1,5 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using System;
+using System.ComponentModel.DataAnnotations;
 using System.Device.Location;
 
 namespace Geocaching
@@ -17,6 +18,7 @@ namespace Geocaching
         public string Country { get; internal set; }
         public string Description { get; internal set; }
         public float Difficulty { get; internal set; }
+        public DateTime LastChanged { get; internal set; }
         public string LongDescription { get; internal set; }
         public string Name { get; internal set; }
         public string Owner { get; internal set; }

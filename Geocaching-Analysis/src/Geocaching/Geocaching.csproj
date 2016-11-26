@@ -91,6 +91,10 @@
     <Compile Include="Migrations\201611250600476_CorrectGeocacheKey.Designer.cs">
       <DependentUpon>201611250600476_CorrectGeocacheKey.cs</DependentUpon>
     </Compile>
+    <Compile Include="Migrations\201611260548015_AddGeocacheLastChanged.cs" />
+    <Compile Include="Migrations\201611260548015_AddGeocacheLastChanged.Designer.cs">
+      <DependentUpon>201611260548015_AddGeocacheLastChanged.cs</DependentUpon>
+    </Compile>
     <Compile Include="Migrations\Configuration.cs" />
     <Compile Include="PocketQuery.cs" />
     <Compile Include="WebExtractorPocketQuery.cs" />
@@ -137,6 +141,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="Migrations\201611250600476_CorrectGeocacheKey.resx">
       <DependentUpon>201611250600476_CorrectGeocacheKey.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Migrations\201611260548015_AddGeocacheLastChanged.resx">
+      <DependentUpon>201611260548015_AddGeocacheLastChanged.cs</DependentUpon>
     </EmbeddedResource>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
