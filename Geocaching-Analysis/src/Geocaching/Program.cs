@@ -65,10 +65,7 @@ namespace Geocaching
             }
 
             if (pq != null)
-            {
-                //pq = pocketQuery;
-                //ctx.Entry(pq).State = System.Data.Entity.EntityState.Modified;
-                
+            {                
                 ctx.PocketQueries.Attach(pocketQuery);
                 ctx.Entry(pocketQuery).State = System.Data.Entity.EntityState.Modified;
             }
