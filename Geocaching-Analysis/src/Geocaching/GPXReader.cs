@@ -47,7 +47,7 @@ namespace Geocaching
                 geocache.LastChanged = datePocketQueryGenerated;
 
                 geocache.Time = wpt.Element(ns + "time").Value;
-                geocache.Code = wpt.Element(ns + "name").Value;
+                geocache.GeocacheID = wpt.Element(ns + "name").Value;
                 geocache.Description = wpt.Element(ns + "desc").Value;
                 geocache.URL = wpt.Element(ns + "url").Value;
                 geocache.URLName = wpt.Element(ns + "urlname").Value;

@@ -13,7 +13,7 @@ namespace Geocaching.Migrations
         
         string IMigrationMetadata.Id
         {
-            get { return "201611280042094_AddGeocacheLogs"; }
+            get { return "201611280220324_AddGeocacheLogs"; }
         }
         
         string IMigrationMetadata.Source

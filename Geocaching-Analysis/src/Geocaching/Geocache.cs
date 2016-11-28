@@ -18,7 +18,7 @@ namespace Geocaching
 
         public string CacheID { get; internal set; }
         [Key]
-        public string Code { get; internal set; }
+        public string GeocacheID { get; internal set; }
         public string Country { get; internal set; }
         public string Description { get; internal set; }
         public float Difficulty { get; internal set; }
@@ -44,8 +44,12 @@ namespace Geocaching
 
     public class Log
     {
+        private string _GeocacheID;
+
         [Key, DatabaseG‌​enerated(DatabaseGen‌​eratedOption.None)]
         public Int64 ID { get; internal set; }
+        public string GeocacheID { get; internal set; }
+        [ForeignKey("GeocacheID")]
         public virtual Geocache ParentGeocache { get; internal set; }
         public DateTime Date { get; internal set; }
         public String Type { get; internal set; }
@@ -55,6 +59,9 @@ namespace Geocaching
         public Log(Geocache parent)
         {
             ParentGeocache = parent;
+            GeocacheID = parent.GeocacheID;
         }
+
+        public Log() { }
     }
 }

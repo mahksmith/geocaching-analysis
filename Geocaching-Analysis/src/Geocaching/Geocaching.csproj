@@ -95,9 +95,9 @@
     <Compile Include="Migrations\201611260548015_AddGeocacheLastChanged.Designer.cs">
       <DependentUpon>201611260548015_AddGeocacheLastChanged.cs</DependentUpon>
     </Compile>
-    <Compile Include="Migrations\201611280042094_AddGeocacheLogs.cs" />
-    <Compile Include="Migrations\201611280042094_AddGeocacheLogs.Designer.cs">
-      <DependentUpon>201611280042094_AddGeocacheLogs.cs</DependentUpon>
+    <Compile Include="Migrations\201611280220324_AddGeocacheLogs.cs" />
+    <Compile Include="Migrations\201611280220324_AddGeocacheLogs.Designer.cs">
+      <DependentUpon>201611280220324_AddGeocacheLogs.cs</DependentUpon>
     </Compile>
     <Compile Include="Migrations\Configuration.cs" />
     <Compile Include="PocketQuery.cs" />
@@ -149,8 +149,8 @@
     <EmbeddedResource Include="Migrations\201611260548015_AddGeocacheLastChanged.resx">
       <DependentUpon>201611260548015_AddGeocacheLastChanged.cs</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="Migrations\201611280042094_AddGeocacheLogs.resx">
-      <DependentUpon>201611280042094_AddGeocacheLogs.cs</DependentUpon>
+    <EmbeddedResource Include="Migrations\201611280220324_AddGeocacheLogs.resx">
+      <DependentUpon>201611280220324_AddGeocacheLogs.cs</DependentUpon>
     </EmbeddedResource>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

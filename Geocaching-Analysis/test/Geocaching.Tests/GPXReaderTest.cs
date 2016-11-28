@@ -19,8 +19,8 @@ namespace Geocaching.Tests
             {
                 Assert.IsNotNull(cache.CacheID);
                 Assert.IsNotEmpty(cache.CacheID);
-                Assert.IsNotNull(cache.Code);
-                Assert.IsNotEmpty(cache.Code);
+                Assert.IsNotNull(cache.GeocacheID);
+                Assert.IsNotEmpty(cache.GeocacheID);
                 Assert.IsNotNull(cache.Country);
                 Assert.IsNotEmpty(cache.Country);
                 Assert.IsNotNull(cache.Description);

@@ -42,11 +42,10 @@ namespace Geocaching
             }
 
             //TODO I've selected ALL geocache codes, there must be a way to get only those in the PQ.
-            //var databaseTest = ctx.Geocaches.AsNoTracking().Select(a => a.Code).Where(a => true).ToList();
-            var databaseTest = ctx.Geocaches.AsNoTracking().Where(a => true).ToList();
+            var databaseTest = ctx.Geocaches.AsNoTracking().Where(a => true).ToDictionary(a => a.GeocacheID);
             foreach (Geocache cache in pocketQuery.Geocaches)
             {
-                if (databaseTest.Any(a => a.Code == cache.Code))
+                if (databaseTest.ContainsKey(cache.GeocacheID))
                 {
                     ctx.Geocaches.Attach(cache);
                     ctx.Entry(cache).State = System.Data.Entity.EntityState.Modified;
@@ -58,7 +57,13 @@ namespace Geocaching
 
                 foreach (Log log in cache.Logs)
                 {
-                    ctx.Logs.Add(log);
+                    if (databaseTest.ContainsKey(cache.GeocacheID) && databaseTest[cache.GeocacheID].Logs.SingleOrDefault(a => a.ID == log.ID) != null)
+                    {
+                        ctx.Logs.Attach(log);
+                        ctx.Entry(log).State = System.Data.Entity.EntityState.Modified;
+                    }
+                    else
+                        ctx.Logs.Add(log);
                 }
             }
 
