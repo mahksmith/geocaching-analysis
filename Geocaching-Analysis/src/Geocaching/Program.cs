@@ -12,21 +12,12 @@ namespace Geocaching
             //Check PocketQueries, save any new data.
             List<PocketQuery> queries = new WebExtractorPocketQuery().ExtractPocketQueries().ToList();
 
-            //var databaseDict = ctx.Geocaches.AsNoTracking().Where(a => true).ToDictionary(a => a.Code);
-
             foreach (PocketQuery pocketQuery in queries)
             {
                 //New Context every query decreases chances of error
                 using (var ctx = new DatabaseEntityContext())
                 {
-                    try
-                    {
-                        SavePocketQuery(ctx, pocketQuery);
-                    }
-                    catch (System.Data.DataException e)
-                    {
-                        System.Console.WriteLine("{0} - {1}", e.Source, e.Message);
-                    }
+                    SavePocketQuery(ctx, pocketQuery);
                 }
             }
         }
@@ -51,10 +42,11 @@ namespace Geocaching
             }
 
             //TODO I've selected ALL geocache codes, there must be a way to get only those in the PQ.
-            var databaseTest = ctx.Geocaches.AsNoTracking().Select(a => a.Code).Where(a => true).ToList();
+            //var databaseTest = ctx.Geocaches.AsNoTracking().Select(a => a.Code).Where(a => true).ToList();
+            var databaseTest = ctx.Geocaches.AsNoTracking().Where(a => true).ToList();
             foreach (Geocache cache in pocketQuery.Geocaches)
             {
-                if (databaseTest.Contains(cache.Code))
+                if (databaseTest.Any(a => a.Code == cache.Code))
                 {
                     ctx.Geocaches.Attach(cache);
                     ctx.Entry(cache).State = System.Data.Entity.EntityState.Modified;
@@ -62,6 +54,11 @@ namespace Geocaching
                 else
                 {
                     ctx.Geocaches.Add(cache);
+                }
+
+                foreach (Log log in cache.Logs)
+                {
+                    ctx.Logs.Add(log);
                 }
             }
 

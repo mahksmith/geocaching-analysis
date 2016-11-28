@@ -52,6 +52,22 @@ namespace Geocaching.Tests
                 Assert.IsNotEmpty(cache.URL);
                 Assert.IsNotNull(cache.URLName);
                 Assert.IsNotEmpty(cache.URLName);
+
+                Assert.IsTrue(cache.Logs.Count > 0);
+
+                foreach (Log log in cache.Logs)
+                {
+                    Assert.IsNotNull(log.ID);
+                    Assert.NotZero(log.ID);
+                    Assert.IsNotNull(log.Date);
+                    Assert.IsNotNull(log.Type);
+                    Assert.IsNotEmpty(log.Type);
+                    Assert.IsNotNull(log.Author);
+                    Assert.IsNotEmpty(log.Author);
+                    Assert.IsNotEmpty(log.Text);
+                    Assert.IsNotNull(log.Text);
+                    Assert.IsNotNull(log.TextEncoded);
+                }
             }
         }
     }

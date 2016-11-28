@@ -66,7 +66,6 @@ namespace Geocaching
 
                 //TODO:attributes go here
 
-
                 geocache.Difficulty = Convert.ToSingle(groundspeak.Element(gs + "difficulty").Value);
                 geocache.Terrain = Convert.ToSingle(groundspeak.Element(gs + "terrain").Value);
                 geocache.Country = groundspeak.Element(gs + "country").Value;
@@ -75,6 +74,27 @@ namespace Geocaching
                 geocache.LongDescription = groundspeak.Element(gs + "long_description").Value;
 
                 // save logs here
+                foreach (XElement l in groundspeak.Descendants(gs + "log"))
+                {
+                    Log log = new Log(geocache);
+                    log.ID = Int64.Parse(l.FirstAttribute.Value);
+                    /* date */
+                    log.Date = DateTime.Parse(l.Element(gs + "date").Value);
+                    /* type */
+                    log.Type = l.Element(gs + "type").Value;
+                    /* author */
+                    log.Author = l.Element(gs + "finder").Value; //TODO get finder ID from attribute
+                    /* text */
+                    log.Text = l.Element(gs + "text").Value;
+                    /* text encoded */
+                    log.TextEncoded = Boolean.Parse(l.Element(gs + "text").FirstAttribute.Value);
+
+
+
+                    geocache.Logs.Add(log);
+
+
+                }
 
                 geocaches.Add(geocache);
             }
