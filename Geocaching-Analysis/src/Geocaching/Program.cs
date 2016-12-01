@@ -1,6 +1,10 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
+using System.Data;
+using System.Data.SqlClient;
 using System.Diagnostics;
 using System.Linq;
+using System.Text;
 
 namespace Geocaching
 {
@@ -14,15 +18,17 @@ namespace Geocaching
 
             foreach (PocketQuery pocketQuery in queries)
             {
-                //New Context every query decreases chances of error
-                using (var ctx = new DatabaseEntityContext())
+                using (SqlConnection conn = new SqlConnection())
                 {
-                    SavePocketQuery(ctx, pocketQuery);
+                    conn.ConnectionString = "Data Source=(localdb)\\MSSQLLocalDB;Initial Catalog=Geocaching.DatabaseEntityContext;Integrated Security=True;Connect Timeout=30;Encrypt=False;TrustServerCertificate=True;ApplicationIntent=ReadWrite;MultiSubnetFailover=False";
+                    conn.Open();
+
+                    SavePocketQuery(conn, pocketQuery);
                 }
             }
         }
 
-        private static void SavePocketQuery(DatabaseEntityContext ctx, PocketQuery pocketQuery)
+        private static void SavePocketQuery(SqlConnection conn, PocketQuery pocketQuery)
         {
             //There's no point download Pocket Queries that have not been updated.
             //TODO: Try to find if theres a different way to check if Pocket Queries differ without downloading?
@@ -31,53 +37,103 @@ namespace Geocaching
 
             PocketQuery pq = null;
 
-            //1. Get pocketquery from DB
-            pq = ctx.PocketQueries.AsNoTracking().Where(q => q.Name.Equals(pocketQuery.Name)).FirstOrDefault<PocketQuery>();
-
-            //2. change stuff?
-            if (pq != null && pq.DateGenerated.Equals(pocketQuery.DateGenerated))
+            SqlCommand pqCommand = new SqlCommand("SELECT COUNT(*) FROM PocketQueries WHERE PocketQueries.DateGenerated < @date AND PocketQueries.Name = @name");
+            pqCommand.Parameters.Add(new SqlParameter("date", pocketQuery.DateGenerated));
+            pqCommand.Parameters.Add(new SqlParameter("name", pocketQuery.Name));
+            pqCommand.Connection = conn;
+            using (SqlDataReader dataReader = pqCommand.ExecuteReader())
             {
-                Debug.WriteLine("Throwing away " + pocketQuery.Name);
-                return;
-            }
+                dataReader.Read();
+                if (int.Parse(dataReader[0].ToString()) > 0) { }
 
-            //TODO I've selected ALL geocache codes, there must be a way to get only those in the PQ.
-            var databaseTest = ctx.Geocaches.AsNoTracking().Where(a => true).ToDictionary(a => a.GeocacheID);
-            foreach (Geocache cache in pocketQuery.Geocaches)
-            {
-                if (databaseTest.ContainsKey(cache.GeocacheID))
-                {
-                    ctx.Geocaches.Attach(cache);
-                    ctx.Entry(cache).State = System.Data.Entity.EntityState.Modified;
-                }
                 else
                 {
-                    ctx.Geocaches.Add(cache);
+                    Debug.WriteLine("Throwing away " + pocketQuery.Name);
+                    return;
                 }
+            }
 
-                foreach (Log log in cache.Logs)
-                {
-                    if (databaseTest.ContainsKey(cache.GeocacheID) && databaseTest[cache.GeocacheID].Logs.SingleOrDefault(a => a.ID == log.ID) != null)
+            //Build Delta Query.
+            StringBuilder sb = new StringBuilder();
+            foreach (Geocache g in pocketQuery.Geocaches)
+                sb.Append(",'" + g.GeocacheID + "'");
+            sb.Remove(0, 1);
+            
+            SqlCommand command = new SqlCommand("SELECT GeocacheID, LastChanged FROM Geocaches WHERE GeocacheID IN (" + sb.ToString() + ");")
+            {
+                Connection = conn
+            };
+
+            using (SqlDataReader dataReader = command.ExecuteReader())
+            {
+                SqlTransaction transaction = conn.BeginTransaction();
+                SqlCommand saveGeocache = conn.CreateCommand();
+                saveGeocache.Transaction = transaction;
+                
+                while (dataReader.Read()) {
+                    Geocache toBeUpdated = pocketQuery.Geocaches.Single(a=> a.GeocacheID.Equals(dataReader["GeocacheID"].ToString()));
+                    DateTime lastchanged = DateTime.Parse(dataReader["LastChanged"].ToString());
+                    if (lastchanged < toBeUpdated.LastChanged)
                     {
-                        ctx.Logs.Attach(log);
-                        ctx.Entry(log).State = System.Data.Entity.EntityState.Modified;
+                        command.CommandText = "UPDATE Geocaches SET Description = 'foobar' WHERE GeocacheID IN ('" + toBeUpdated.CacheID + "');";
+                        command.ExecuteNonQuery();
                     }
-                    else
-                        ctx.Logs.Add(log);
                 }
+
+
+                //Also save pocketQuery.
+
+
+
+                transaction.Commit();
             }
 
-            if (pq != null)
-            {
-                ctx.PocketQueries.Attach(pocketQuery);
-                ctx.Entry(pocketQuery).State = System.Data.Entity.EntityState.Modified;
-            }
-            else
-            {
-                ctx.PocketQueries.Add(pocketQuery);
-            }
 
-            ctx.SaveChanges();
+
+            //2. change stuff?
+            //if (pq != null && pq.DateGenerated.Equals(pocketQuery.DateGenerated))
+            //{
+            //    Debug.WriteLine("Throwing away " + pocketQuery.Name);
+            //    return;
+            //}
+
+            ////TODO I've selected ALL geocache codes, there must be a way to get only those in the PQ.
+            //var databaseTest = ctx.Geocaches.AsNoTracking().Where(a => true).ToDictionary(a => a.GeocacheID);
+            //foreach (Geocache cache in pocketQuery.Geocaches)
+            //{
+            //    if (databaseTest.ContainsKey(cache.GeocacheID))
+            //    {
+            //        ctx.Geocaches.Attach(cache);
+            //        ctx.Entry(cache).State = System.Data.Entity.EntityState.Modified;
+            //    }
+            //    else
+            //    {
+            //        ctx.Geocaches.Add(cache);
+            //    }
+
+            //    foreach (Log log in cache.Logs)
+            //    {
+            //        if (databaseTest.ContainsKey(cache.GeocacheID) && databaseTest[cache.GeocacheID].Logs.SingleOrDefault(a => a.ID == log.ID) != null)
+            //        {
+            //            ctx.Logs.Attach(log);
+            //            ctx.Entry(log).State = System.Data.Entity.EntityState.Modified;
+            //        }
+            //        else
+            //            ctx.Logs.Add(log);
+            //    }
+            //}
+
+            //if (pq != null)
+            //{
+            //    ctx.PocketQueries.Attach(pocketQuery);
+            //    ctx.Entry(pocketQuery).State = System.Data.Entity.EntityState.Modified;
+            //}
+            //else
+            //{
+            //    ctx.PocketQueries.Add(pocketQuery);
+            //}
+
+            //ctx.SaveChanges();
         }
     }
 }
