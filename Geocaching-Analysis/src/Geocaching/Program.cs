@@ -30,7 +30,7 @@ namespace Geocaching
 
         private static void SavePocketQuery(SqlConnection connection, PocketQuery pocketQuery)
         {
-
+            PocketQuery dbPocketQuery = null;
             SqlCommand pqCommand = new SqlCommand("SELECT DateGenerated FROM PocketQueries WHERE Name = @name");
             pqCommand.Parameters.Add(new SqlParameter("name", pocketQuery.Name));
             pqCommand.Connection = connection;
@@ -45,6 +45,8 @@ namespace Geocaching
                         Debug.WriteLine("Throwing away " + pocketQuery.Name);
                         return;
                     }
+                    else
+                        dbPocketQuery = new PocketQuery(); //fill this out more?
                 }
             }
 
@@ -54,7 +56,7 @@ namespace Geocaching
                 sb.Append(",'" + g.GeocacheID + "'");
             sb.Remove(0, 1);
 
-            SqlCommand command = new SqlCommand("SELECT GeocacheID, LastChanged FROM Geocaches WHERE GeocacheID IN (" + sb.ToString() + ");")
+            SqlCommand command = new SqlCommand(String.Format("SELECT GeocacheID, LastChanged FROM Geocaches WHERE GeocacheID IN ({0});", sb.ToString()))
             {
                 Connection = connection
             };
@@ -63,7 +65,7 @@ namespace Geocaching
             var geocacheDataTable = new DataTable();
             geocacheDataTable.Load(dataReader);
 
-            command = new SqlCommand("SELECT GeocacheID, ID FROM Logs WHERE GeocacheID IN (" + sb.ToString() + ");")
+            command = new SqlCommand(String.Format("SELECT GeocacheID, ID FROM Logs WHERE GeocacheID IN ({0});", sb.ToString()))
             {
                 Connection = connection
             };
@@ -74,59 +76,54 @@ namespace Geocaching
 
             SqlTransaction transaction = connection.BeginTransaction();
             GeocacheRepository repo = new GeocacheRepository(connection, transaction);
-            //LogRepository logRepo = new LogRepository(connection, transaction); TODO
+            LogRepository logRepo = new LogRepository(connection, transaction);
             //PocketQueryRepository pqRepo = new PocketQueryRepository(connection, transaction); TODO
 
             foreach (Geocache cache in pocketQuery.Geocaches)
             {
-                DataRow row = geocacheDataTable.Select("GeocacheID = '" + cache.GeocacheID + "'").FirstOrDefault();
+                DataRow row = geocacheDataTable.Select(String.Format("GeocacheID = '{0}'", cache.GeocacheID)).FirstOrDefault();
                 if (row != null)
                 {
                     if (DateTime.Parse(row["LastChanged"].ToString()) < cache.LastChanged)
                         repo.Update(cache);
                 }
                 else
-                    //Add to database
                     repo.Add(cache);
 
                 //Also save logs in each geocache.
                 foreach (Log log in cache.Logs)
                 {
-                    DataRow logRow = logDataTable.Select("GeocacheID = '" + log.GeocacheID + "' AND " + "ID = '" + log.ID + "'").FirstOrDefault();
-                    //if (logRow != null)
-                        //logRepo.Update(log); TODO
-                    //else
-                        //logRepo.Add(log); TODO
+                    DataRow logRow = logDataTable.Select(String.Format("GeocacheID = '{0}' AND ID = '{1}'", log.GeocacheID, log.ID)).FirstOrDefault();
+                    if (logRow != null)
+                        logRepo.Update(log);
+                    else
+                        logRepo.Add(log);
                 }
             }
 
-
-
-
-            //    foreach (Log log in cache.Logs)
-            //    {
-            //        if (databaseTest.ContainsKey(cache.GeocacheID) && databaseTest[cache.GeocacheID].Logs.SingleOrDefault(a => a.ID == log.ID) != null)
-            //        {
-            //            ctx.Logs.Attach(log);
-            //            ctx.Entry(log).State = System.Data.Entity.EntityState.Modified;
-            //        }
-            //        else
-            //            ctx.Logs.Add(log);
-            //    }
-            //}
-
-            //if (pq != null)
-            //{
-            //    ctx.PocketQueries.Attach(pocketQuery);
-            //    ctx.Entry(pocketQuery).State = System.Data.Entity.EntityState.Modified;
-            //}
+            //if (dbPocketQuery != null)
+            //pqRepo.Update(pocketQuery)
             //else
-            //{
-            //    ctx.PocketQueries.Add(pocketQuery);
-            //}
+            //pqRepo.Add(pocketQuery);
 
-            //ctx.SaveChanges();
-            transaction.Commit();
+            try
+            {
+                transaction.Commit();
+            }
+            catch (Exception commit)
+            {
+                //Commit failed, try rollback
+                try
+                {
+                    transaction.Rollback();
+                }
+                catch (Exception rollback)
+                {
+                    //TODO
+                }
+
+                throw;
+            }
         }
     }
 }

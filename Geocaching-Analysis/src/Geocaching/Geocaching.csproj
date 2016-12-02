@@ -81,6 +81,7 @@
     <Compile Include="GPXReader.cs" />
     <Compile Include="IRepository.cs" />
     <Compile Include="IUoWRepository.cs" />
+    <Compile Include="LogRepository.cs" />
     <Compile Include="PocketQuery.cs" />
     <Compile Include="WebExtractorPocketQuery.cs" />
     <Compile Include="Program.cs" />
