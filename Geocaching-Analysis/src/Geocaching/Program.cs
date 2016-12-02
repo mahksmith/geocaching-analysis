@@ -47,7 +47,7 @@ namespace Geocaching
                 }
             }
 
-            //Build Delta Query.
+            //Pull All Geocaches In PocketQuery from DB
             StringBuilder sb = new StringBuilder();
             foreach (Geocache g in pocketQuery.Geocaches)
                 sb.Append(",'" + g.GeocacheID + "'");
@@ -59,15 +59,24 @@ namespace Geocaching
             };
 
             var dataReader = command.ExecuteReader();
-            var dataTable = new DataTable();
-            dataTable.Load(dataReader);
+            var geocacheDataTable = new DataTable();
+            geocacheDataTable.Load(dataReader);
+
+            command = new SqlCommand("SELECT GeocacheID, ID FROM Logs WHERE GeocacheID IN (" + sb.ToString() + ");")
+            {
+                Connection = connection
+            };
+
+            dataReader = command.ExecuteReader();
+            var logDataTable = new DataTable();
+            logDataTable.Load(dataReader);
 
             SqlTransaction transaction = connection.BeginTransaction();
             GeocacheRepository repo = new GeocacheRepository(connection, transaction);
 
             foreach (Geocache cache in pocketQuery.Geocaches)
             {
-                DataRow row = dataTable.Select("GeocacheID = '" + cache.GeocacheID + "'").FirstOrDefault();
+                DataRow row = geocacheDataTable.Select("GeocacheID = '" + cache.GeocacheID + "'").FirstOrDefault();
                 if (row != null)
                 {
                     if (DateTime.Parse(row["LastChanged"].ToString()) < cache.LastChanged)
@@ -82,10 +91,18 @@ namespace Geocaching
                 }
 
                 //Also save logs in each geocache.
-                //foreach (Log log in cache.Logs)
-                //{
-                    
-                //}
+                foreach (Log log in cache.Logs)
+                {
+                    DataRow logRow = logDataTable.Select("GeocacheID = '" + log.GeocacheID + "' AND " + "ID = '" + log.ID + "'").FirstOrDefault();
+                    if (logRow != null)
+                    {
+                        //logRepo.Update(log); TODO
+                    }
+                    else
+                    {
+                        //logRepo.Add(log); TODO
+                    }
+                }
             }
 
 
