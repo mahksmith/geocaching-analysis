@@ -31,19 +31,20 @@ namespace Geocaching
         private static void SavePocketQuery(SqlConnection connection, PocketQuery pocketQuery)
         {
 
-            SqlCommand pqCommand = new SqlCommand("SELECT COUNT(*) FROM PocketQueries WHERE PocketQueries.DateGenerated < @date AND PocketQueries.Name = @name");
-            pqCommand.Parameters.Add(new SqlParameter("date", pocketQuery.DateGenerated));
+            SqlCommand pqCommand = new SqlCommand("SELECT DateGenerated FROM PocketQueries WHERE Name = @name");
             pqCommand.Parameters.Add(new SqlParameter("name", pocketQuery.Name));
             pqCommand.Connection = connection;
             using (SqlDataReader dr = pqCommand.ExecuteReader())
             {
                 dr.Read();
-                if (int.Parse(dr[0].ToString()) > 0) { }
-
-                else
+                if (dr.HasRows)
                 {
-                    Debug.WriteLine("Throwing away " + pocketQuery.Name);
-                    return;
+                    if (!(DateTime.Parse(dr[0].ToString()) < pocketQuery.DateGenerated))
+                    {
+
+                        Debug.WriteLine("Throwing away " + pocketQuery.Name);
+                        return;
+                    }
                 }
             }
 
@@ -73,6 +74,8 @@ namespace Geocaching
 
             SqlTransaction transaction = connection.BeginTransaction();
             GeocacheRepository repo = new GeocacheRepository(connection, transaction);
+            //LogRepository logRepo = new LogRepository(connection, transaction); TODO
+            //PocketQueryRepository pqRepo = new PocketQueryRepository(connection, transaction); TODO
 
             foreach (Geocache cache in pocketQuery.Geocaches)
             {
@@ -80,34 +83,25 @@ namespace Geocaching
                 if (row != null)
                 {
                     if (DateTime.Parse(row["LastChanged"].ToString()) < cache.LastChanged)
-                    {
                         repo.Update(cache);
-                    }
                 }
                 else
-                {
                     //Add to database
                     repo.Add(cache);
-                }
 
                 //Also save logs in each geocache.
                 foreach (Log log in cache.Logs)
                 {
                     DataRow logRow = logDataTable.Select("GeocacheID = '" + log.GeocacheID + "' AND " + "ID = '" + log.ID + "'").FirstOrDefault();
-                    if (logRow != null)
-                    {
+                    //if (logRow != null)
                         //logRepo.Update(log); TODO
-                    }
-                    else
-                    {
+                    //else
                         //logRepo.Add(log); TODO
-                    }
                 }
             }
 
 
-            //Also save pocketQuery
-            
+
 
             //    foreach (Log log in cache.Logs)
             //    {
@@ -132,6 +126,7 @@ namespace Geocaching
             //}
 
             //ctx.SaveChanges();
+            transaction.Commit();
         }
     }
 }
