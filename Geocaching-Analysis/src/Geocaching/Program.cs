@@ -28,23 +28,17 @@ namespace Geocaching
             }
         }
 
-        private static void SavePocketQuery(SqlConnection conn, PocketQuery pocketQuery)
+        private static void SavePocketQuery(SqlConnection connection, PocketQuery pocketQuery)
         {
-            //There's no point download Pocket Queries that have not been updated.
-            //TODO: Try to find if theres a different way to check if Pocket Queries differ without downloading?
-
-            // Pocket Query update using http://www.entityframeworktutorial.net/EntityFramework4.3/update-entity-using-dbcontext.aspx
-
-            PocketQuery pq = null;
 
             SqlCommand pqCommand = new SqlCommand("SELECT COUNT(*) FROM PocketQueries WHERE PocketQueries.DateGenerated < @date AND PocketQueries.Name = @name");
             pqCommand.Parameters.Add(new SqlParameter("date", pocketQuery.DateGenerated));
             pqCommand.Parameters.Add(new SqlParameter("name", pocketQuery.Name));
-            pqCommand.Connection = conn;
-            using (SqlDataReader dataReader = pqCommand.ExecuteReader())
+            pqCommand.Connection = connection;
+            using (SqlDataReader dr = pqCommand.ExecuteReader())
             {
-                dataReader.Read();
-                if (int.Parse(dataReader[0].ToString()) > 0) { }
+                dr.Read();
+                if (int.Parse(dr[0].ToString()) > 0) { }
 
                 else
                 {
@@ -58,58 +52,45 @@ namespace Geocaching
             foreach (Geocache g in pocketQuery.Geocaches)
                 sb.Append(",'" + g.GeocacheID + "'");
             sb.Remove(0, 1);
-            
+
             SqlCommand command = new SqlCommand("SELECT GeocacheID, LastChanged FROM Geocaches WHERE GeocacheID IN (" + sb.ToString() + ");")
             {
-                Connection = conn
+                Connection = connection
             };
 
-            using (SqlDataReader dataReader = command.ExecuteReader())
+            var dataReader = command.ExecuteReader();
+            var dataTable = new DataTable();
+            dataTable.Load(dataReader);
+
+            SqlTransaction transaction = connection.BeginTransaction();
+            GeocacheRepository repo = new GeocacheRepository(connection, transaction);
+
+            foreach (Geocache cache in pocketQuery.Geocaches)
             {
-                SqlTransaction transaction = conn.BeginTransaction();
-                SqlCommand saveGeocache = conn.CreateCommand();
-                saveGeocache.Transaction = transaction;
-                
-                while (dataReader.Read()) {
-                    Geocache toBeUpdated = pocketQuery.Geocaches.Single(a=> a.GeocacheID.Equals(dataReader["GeocacheID"].ToString()));
-                    DateTime lastchanged = DateTime.Parse(dataReader["LastChanged"].ToString());
-                    if (lastchanged < toBeUpdated.LastChanged)
+                DataRow row = dataTable.Select("GeocacheID = '" + cache.GeocacheID + "'").FirstOrDefault();
+                if (row != null)
+                {
+                    if (DateTime.Parse(row["LastChanged"].ToString()) < cache.LastChanged)
                     {
-                        command.CommandText = "UPDATE Geocaches SET Description = 'foobar' WHERE GeocacheID IN ('" + toBeUpdated.CacheID + "');";
-                        command.ExecuteNonQuery();
+                        repo.Update(cache);
                     }
                 }
+                else
+                {
+                    //Add to database
+                    repo.Add(cache);
+                }
 
-
-                //Also save pocketQuery.
-
-
-
-                transaction.Commit();
+                //Also save logs in each geocache.
+                //foreach (Log log in cache.Logs)
+                //{
+                    
+                //}
             }
 
 
-
-            //2. change stuff?
-            //if (pq != null && pq.DateGenerated.Equals(pocketQuery.DateGenerated))
-            //{
-            //    Debug.WriteLine("Throwing away " + pocketQuery.Name);
-            //    return;
-            //}
-
-            ////TODO I've selected ALL geocache codes, there must be a way to get only those in the PQ.
-            //var databaseTest = ctx.Geocaches.AsNoTracking().Where(a => true).ToDictionary(a => a.GeocacheID);
-            //foreach (Geocache cache in pocketQuery.Geocaches)
-            //{
-            //    if (databaseTest.ContainsKey(cache.GeocacheID))
-            //    {
-            //        ctx.Geocaches.Attach(cache);
-            //        ctx.Entry(cache).State = System.Data.Entity.EntityState.Modified;
-            //    }
-            //    else
-            //    {
-            //        ctx.Geocaches.Add(cache);
-            //    }
+            //Also save pocketQuery
+            
 
             //    foreach (Log log in cache.Logs)
             //    {
