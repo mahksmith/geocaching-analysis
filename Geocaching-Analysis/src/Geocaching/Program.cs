@@ -77,7 +77,7 @@ namespace Geocaching
             SqlTransaction transaction = connection.BeginTransaction();
             GeocacheRepository repo = new GeocacheRepository(connection, transaction);
             LogRepository logRepo = new LogRepository(connection, transaction);
-            //PocketQueryRepository pqRepo = new PocketQueryRepository(connection, transaction); TODO
+            PocketQueryRepository pqRepo = new PocketQueryRepository(connection, transaction);
 
             foreach (Geocache cache in pocketQuery.Geocaches)
             {
@@ -101,10 +101,10 @@ namespace Geocaching
                 }
             }
 
-            //if (dbPocketQuery != null)
-            //pqRepo.Update(pocketQuery)
-            //else
-            //pqRepo.Add(pocketQuery);
+            if (dbPocketQuery != null)
+                pqRepo.Update(pocketQuery);
+            else
+                pqRepo.Add(pocketQuery);
 
             try
             {

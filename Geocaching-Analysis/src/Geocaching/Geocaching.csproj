@@ -83,6 +83,7 @@
     <Compile Include="IUoWRepository.cs" />
     <Compile Include="LogRepository.cs" />
     <Compile Include="PocketQuery.cs" />
+    <Compile Include="PocketQueryRepository.cs" />
     <Compile Include="WebExtractorPocketQuery.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
