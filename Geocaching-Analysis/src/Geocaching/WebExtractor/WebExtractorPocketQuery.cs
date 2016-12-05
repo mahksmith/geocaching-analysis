@@ -6,7 +6,7 @@ using System.Net.Http;
 using System.Diagnostics;
 using System.Threading.Tasks;
 
-namespace Geocaching
+namespace Geocaching.WebExtractor
 {
     public class WebExtractorPocketQuery
     {
