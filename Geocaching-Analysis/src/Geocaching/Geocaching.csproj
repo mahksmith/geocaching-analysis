@@ -76,32 +76,15 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="DatabaseEntityContext.cs" />
     <Compile Include="Geocache.cs" />
+    <Compile Include="GeocacheRepository.cs" />
     <Compile Include="GPXReader.cs" />
-    <Compile Include="Migrations\201611250520526_InitialCreate.cs" />
-    <Compile Include="Migrations\201611250520526_InitialCreate.Designer.cs">
-      <DependentUpon>201611250520526_InitialCreate.cs</DependentUpon>
-    </Compile>
-    <Compile Include="Migrations\201611250557285_RemoveUnnecccessaryGeoCoordinateAttributes.cs" />
-    <Compile Include="Migrations\201611250557285_RemoveUnnecccessaryGeoCoordinateAttributes.Designer.cs">
-      <DependentUpon>201611250557285_RemoveUnnecccessaryGeoCoordinateAttributes.cs</DependentUpon>
-    </Compile>
-    <Compile Include="Migrations\201611250600476_CorrectGeocacheKey.cs" />
-    <Compile Include="Migrations\201611250600476_CorrectGeocacheKey.Designer.cs">
-      <DependentUpon>201611250600476_CorrectGeocacheKey.cs</DependentUpon>
-    </Compile>
-    <Compile Include="Migrations\201611260548015_AddGeocacheLastChanged.cs" />
-    <Compile Include="Migrations\201611260548015_AddGeocacheLastChanged.Designer.cs">
-      <DependentUpon>201611260548015_AddGeocacheLastChanged.cs</DependentUpon>
-    </Compile>
-    <Compile Include="Migrations\201611280220324_AddGeocacheLogs.cs" />
-    <Compile Include="Migrations\201611280220324_AddGeocacheLogs.Designer.cs">
-      <DependentUpon>201611280220324_AddGeocacheLogs.cs</DependentUpon>
-    </Compile>
-    <Compile Include="Migrations\Configuration.cs" />
+    <Compile Include="IRepository.cs" />
+    <Compile Include="IUoWRepository.cs" />
+    <Compile Include="LogRepository.cs" />
     <Compile Include="PocketQuery.cs" />
-    <Compile Include="WebExtractorPocketQuery.cs" />
+    <Compile Include="PocketQueryRepository.cs" />
+    <Compile Include="WebExtractor\WebExtractorPocketQuery.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Properties\Settings.Designer.cs">
@@ -136,23 +119,7 @@
       <Install>false</Install>
     </BootstrapperPackage>
   </ItemGroup>
-  <ItemGroup>
-    <EmbeddedResource Include="Migrations\201611250520526_InitialCreate.resx">
-      <DependentUpon>201611250520526_InitialCreate.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="Migrations\201611250557285_RemoveUnnecccessaryGeoCoordinateAttributes.resx">
-      <DependentUpon>201611250557285_RemoveUnnecccessaryGeoCoordinateAttributes.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="Migrations\201611250600476_CorrectGeocacheKey.resx">
-      <DependentUpon>201611250600476_CorrectGeocacheKey.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="Migrations\201611260548015_AddGeocacheLastChanged.resx">
-      <DependentUpon>201611260548015_AddGeocacheLastChanged.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="Migrations\201611280220324_AddGeocacheLogs.resx">
-      <DependentUpon>201611280220324_AddGeocacheLogs.cs</DependentUpon>
-    </EmbeddedResource>
-  </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
