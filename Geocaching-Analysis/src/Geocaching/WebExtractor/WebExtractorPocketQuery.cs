@@ -1,26 +1,18 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Net;
-using System.Net.Http;
 using System.Diagnostics;
-using System.Threading.Tasks;
 
 namespace Geocaching.WebExtractor
 {
     public class WebExtractorPocketQuery
     {
-        public IEnumerable<PocketQuery> ExtractPocketQueries(HttpClient client = null)
+        public IEnumerable<PocketQuery> ExtractPocketQueries(WebExtractor webExtractor)
         {
-            if (client == null)
-            {
-                Uri baseAddress = new Uri("https://www.geocaching.com/");
-                CookieContainer cookieContainer = new CookieContainer();
-                HttpClientHandler handler = new HttpClientHandler() { CookieContainer = cookieContainer };
-                client = new HttpClient(handler) { BaseAddress = baseAddress };
-            }
 
-            HtmlAgilityPack.HtmlDocument result = LogIn("/account/login?returnUrl=%2Fpocket%2F", client);
+            var client = webExtractor.Client;
+
+            HtmlAgilityPack.HtmlDocument result = webExtractor.GetPage("/pocket/");
 
             //Iterate over each Pocket Query to get the download strings. The fourth one should have the "<a href"
             Debug.WriteLine("Extracting PocketQueries");
@@ -74,51 +66,6 @@ namespace Geocaching.WebExtractor
                 pocketQueries.Add(pocketQuery);
             }
             return pocketQueries;
-        }
-
-        private HtmlAgilityPack.HtmlDocument LogIn(string logInPage, HttpClient client)
-        {
-            Debug.WriteLine("Accessing Geocaching Login..");
-            var pageResult = client.GetAsync(logInPage);
-            pageResult.Result.EnsureSuccessStatusCode();
-
-            Debug.WriteLine("Extracting Form Information..");
-            string requestVerificationToken = ExtractRequestVerificationToken(pageResult);
-
-            //string needs to be of the form
-            //__RequestVerificationToken=[requestVerificationToken]&Username=[username]&Password=[password]
-            var formContent = new FormUrlEncodedContent(new[]
-            {
-                    new KeyValuePair<string, string>("__RequestVerificationToken", requestVerificationToken),
-                    new KeyValuePair<string, string>("Username", System.Configuration.ConfigurationManager.AppSettings["GeocachingUsername"]),
-                    new KeyValuePair<string, string>("Password", System.Configuration.ConfigurationManager.AppSettings["GeocachingPassword"])
-            });
-
-
-            string user = System.Configuration.ConfigurationManager.AppSettings["GeocachingUsername"];
-            string pass = System.Configuration.ConfigurationManager.AppSettings["GeocachingPassword"];
-
-            Debug.WriteLine("Logging in..");
-            var task = client.PostAsync(logInPage, formContent);
-            var read = task.Result.Content.ReadAsStringAsync();
-
-            HtmlAgilityPack.HtmlDocument doc = new HtmlAgilityPack.HtmlDocument();
-            doc.Load(task.Result.Content.ReadAsStreamAsync().Result);
-
-            return doc;
-        }
-
-        private string ExtractRequestVerificationToken(Task<HttpResponseMessage> pageResult)
-        {
-            //<input name="__RequestVerificationToken" type="hidden" value="[value]">
-            var restest = pageResult.Result.Content.ReadAsStringAsync();
-            int startIndex = restest.Result.IndexOf("<input name=\"__RequestVerificationToken");
-            int endIndex = restest.Result.IndexOf('>', startIndex + 1);
-
-            string[] tokens = restest.Result.Substring(startIndex, endIndex - startIndex).Split(' ');
-            tokens = tokens[3].Split('\"');
-
-            return tokens[1];
         }
     }
 }

@@ -13,9 +13,9 @@ namespace Geocaching
     {
         static void Main(string[] args)
         {
-
+            WebExtractor.WebExtractor extractor = new WebExtractor.WebExtractor();
             //Check PocketQueries, save any new data.
-            List<PocketQuery> queries = new WebExtractorPocketQuery().ExtractPocketQueries().ToList();
+            List<PocketQuery> queries = new WebExtractorPocketQuery().ExtractPocketQueries(extractor).ToList();
 
             foreach (PocketQuery pocketQuery in queries)
             {
@@ -27,6 +27,11 @@ namespace Geocaching
                     pocketQuery.Save(conn);
                 }
             }
+
+
+
+            if (Debugger.IsAttached)
+                Console.ReadLine();
         }
     }
 }

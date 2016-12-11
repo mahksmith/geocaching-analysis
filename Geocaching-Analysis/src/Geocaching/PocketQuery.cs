@@ -128,7 +128,7 @@ namespace Geocaching
         {
             Debug.WriteLine($"Unzipping {Name}: {entry.Name}");
 
-            return (new System.IO.StreamReader(entry.Open())).ReadToEnd();
+            return (new StreamReader(entry.Open())).ReadToEnd();
         }
 
         public void Save(SqlConnection connection)

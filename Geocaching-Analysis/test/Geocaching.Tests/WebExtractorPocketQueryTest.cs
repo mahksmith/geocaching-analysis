@@ -1,4 +1,5 @@
-﻿using NUnit.Framework;
+﻿using Geocaching.WebExtractor;
+using NUnit.Framework;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -7,12 +8,20 @@ namespace Geocaching.Tests
     [TestFixture]
     class PocketQueryDownloaderTest
     {
+        private WebExtractor.WebExtractor webExtractor;
+
+        [OneTimeSetUp]
+        public void Setup()
+        {
+            webExtractor = new WebExtractor.WebExtractor();
+        }
+
         [Test]
         public void DownloadPocketQueryIntegrationTest()
         {
             WebExtractorPocketQuery test = new WebExtractorPocketQuery();
 
-            List<PocketQuery> queries = test.ExtractPocketQueries().ToList();
+            List<PocketQuery> queries = test.ExtractPocketQueries(webExtractor).ToList();
             Assert.NotNull(queries);
             Assert.NotZero(queries.Count());
 
