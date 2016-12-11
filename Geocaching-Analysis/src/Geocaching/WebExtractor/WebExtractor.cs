@@ -38,7 +38,7 @@ namespace Geocaching.WebExtractor
             Debug.WriteLine("Checking Login..");
             HtmlDocument document = new HtmlDocument();
             document.Load(task.Result.Content.ReadAsStreamAsync().Result);
-            string result = document.ToString();
+            string result = document.DocumentNode.OuterHtml;
             if (result.Contains("isLoggedIn: true"))
             {
                 Debug.WriteLine("Already logged in..");

@@ -9,9 +9,6 @@ namespace Geocaching.WebExtractor
     {
         public IEnumerable<PocketQuery> ExtractPocketQueries(WebExtractor webExtractor)
         {
-
-            var client = webExtractor.Client;
-
             HtmlAgilityPack.HtmlDocument result = webExtractor.GetPage("/pocket/");
 
             //Iterate over each Pocket Query to get the download strings. The fourth one should have the "<a href"
@@ -32,7 +29,7 @@ namespace Geocaching.WebExtractor
             {
                 PocketQuery pocketQuery = new PocketQuery()
                 {
-                    HttpClient = client
+                    HttpClient = webExtractor.Client
                 };
                 var columns = row.ChildNodes.Where(c => c.Name.Equals("td"));
 
@@ -66,6 +63,24 @@ namespace Geocaching.WebExtractor
                 pocketQueries.Add(pocketQuery);
             }
             return pocketQueries;
+        }
+
+
+        public bool QueueMyFinds(WebExtractor webExtractor)
+        {
+            //System.Configuration.ConfigurationManager.AppSettings[""
+            HtmlAgilityPack.HtmlNode node = webExtractor
+                .GetPage("/pocket/")
+                .GetElementbyId("ctl00_ContentBody_PQListControl1_btnScheduleNow");
+
+            if (node != null)
+            {
+                //TODO We will do a POST
+                //webExtractor.Client.
+            }
+
+
+            return false;
         }
     }
 }

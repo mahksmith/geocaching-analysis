@@ -14,6 +14,12 @@ namespace Geocaching
         static void Main(string[] args)
         {
             WebExtractor.WebExtractor extractor = new WebExtractor.WebExtractor();
+
+
+            //See if we can interact with the Add To Queue button
+            bool test = new WebExtractorPocketQuery().QueueMyFinds(extractor);
+
+
             //Check PocketQueries, save any new data.
             List<PocketQuery> queries = new WebExtractorPocketQuery().ExtractPocketQueries(extractor).ToList();
 
@@ -29,9 +35,11 @@ namespace Geocaching
             }
 
 
-
             if (Debugger.IsAttached)
+            {
+                Debug.WriteLine("Finished");
                 Console.ReadLine();
+            }
         }
     }
 }
