@@ -1,8 +1,8 @@
 # geocaching-analysis
-Exploring Algorithms and Applications related to Geocaching
+Exploring Algorithms and Applications related to Geocaching. See the completed issues for the nitty-gritty details.
 
 Currently achieved:
-* Website Interaction: Get list of PocketQueries. These will be downloaded on demand as required. They are compared to the database versions and not downloaded if they have not updated.
+* Website Interaction: Get list of PocketQueries. These are zipped gpx files and will be downloaded on demand as required. They are compared to the database versions and not downloaded if they have not updated.
 
 Future:
 * I want to run this as a server, generating jobs to do such as: checking PocketQueries hourly, downloading latest versions of geocaches minutely, generating statistics on the fly as logs change, automating website interaction.
