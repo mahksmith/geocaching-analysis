@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Diagnostics;
+using System.Web.UI.HtmlControls;
 
 namespace Geocaching.WebExtractor
 {
@@ -75,8 +76,15 @@ namespace Geocaching.WebExtractor
 
             if (node != null)
             {
+                HtmlAgilityPack.HtmlAttribute attr = node.ChildAttributes("disabled").First();
+                if (attr != null && !attr.Value.Equals("disabled"))
+                {
+                    Console.WriteLine("object is not disabled");
+                }
                 //TODO We will do a POST
                 //webExtractor.Client.
+
+            
             }
 
 

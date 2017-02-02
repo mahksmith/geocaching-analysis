@@ -102,7 +102,7 @@ namespace Geocaching.WebExtractor
             string user = System.Configuration.ConfigurationManager.AppSettings["GeocachingUsername"];
             string pass = System.Configuration.ConfigurationManager.AppSettings["GeocachingPassword"];
 
-            Debug.WriteLine("Logging in..");
+            Debug.WriteLine("Actually Logging In..");
             task = Client.PostAsync(logInPage, formContent);
             var read = task.Result.Content.ReadAsStringAsync();
 
