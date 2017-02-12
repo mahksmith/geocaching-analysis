@@ -99,8 +99,8 @@ namespace Geocaching.WebExtractor
             });
 
 
-            string user = System.Configuration.ConfigurationManager.AppSettings["GeocachingUsername"];
-            string pass = System.Configuration.ConfigurationManager.AppSettings["GeocachingPassword"];
+            //string user = System.Configuration.ConfigurationManager.AppSettings["GeocachingUsername"];
+            //string pass = System.Configuration.ConfigurationManager.AppSettings["GeocachingPassword"];
 
             Debug.WriteLine("Actually Logging In..");
             task = Client.PostAsync(logInPage, formContent);

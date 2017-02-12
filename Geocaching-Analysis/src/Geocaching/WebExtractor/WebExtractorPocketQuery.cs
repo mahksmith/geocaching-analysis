@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Diagnostics;
-using System.Web.UI.HtmlControls;
 
 namespace Geocaching.WebExtractor
 {
@@ -23,7 +22,7 @@ namespace Geocaching.WebExtractor
 
 
             var rows = table.ChildNodes.Where(row => row.Name.Equals("tr"));
-            
+
             List<PocketQuery> pocketQueries = new List<PocketQuery>();
 
             foreach (var row in rows)
@@ -71,7 +70,7 @@ namespace Geocaching.WebExtractor
         {
             //System.Configuration.ConfigurationManager.AppSettings[""
             HtmlAgilityPack.HtmlNode node = webExtractor
-                .GetPage("/pocket/")
+                .GetPage("/pocket/default.aspx")
                 .GetElementbyId("ctl00_ContentBody_PQListControl1_btnScheduleNow");
 
             if (node != null)
@@ -79,14 +78,16 @@ namespace Geocaching.WebExtractor
                 HtmlAgilityPack.HtmlAttribute attr = node.ChildAttributes("disabled").First();
                 if (attr != null && !attr.Value.Equals("disabled"))
                 {
-                    Console.WriteLine("object is not disabled");
+                    // Object is not disabled. Create the formContent and Post.
+                    var formContent = new System.Net.Http.FormUrlEncodedContent(new[]
+                    {
+                        new KeyValuePair<string, string>("ctl00$ContentBody$PQListControl1$btnScheduleNow", "Add to Queue"),
+                    });
+                    
+                    var task = webExtractor.Client.PostAsync("/pocket/default.aspx", formContent);
+                    var read = task.Result.Content.ReadAsStringAsync().Result;
                 }
-                //TODO We will do a POST
-                //webExtractor.Client.
-
-            
             }
-
 
             return false;
         }
