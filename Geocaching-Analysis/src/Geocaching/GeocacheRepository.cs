@@ -49,7 +49,6 @@ namespace Geocaching
             add.Parameters.AddWithValue("Altitude", geocache.Altitude);
             add.Parameters.AddWithValue("LastChanged", geocache.LastChanged);
             add.Parameters.AddWithValue("GeocacheID", geocache.GeocacheID);
-
             add.ExecuteNonQuery();
         }
 
@@ -115,7 +114,6 @@ namespace Geocaching
             update.Parameters.AddWithValue("Altitude", geocache.Altitude);
             update.Parameters.AddWithValue("LastChanged", geocache.LastChanged);
             update.Parameters.AddWithValue("GeocacheID", geocache.GeocacheID);
-            update.ExecuteNonQuery();
         }
 
         public void Commit()

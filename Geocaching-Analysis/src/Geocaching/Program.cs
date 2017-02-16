@@ -1,32 +1,36 @@
 ﻿using Geocaching.WebExtractor;
 using System;
 using System.Collections.Generic;
-using System.Data;
 using System.Data.SqlClient;
-using System.Diagnostics;
 using System.Linq;
-using System.Text;
+using System.Threading.Tasks;
 
 namespace Geocaching
 {
     class Program
     {
+        private static Object websiteLock = new Object();
         static void Main(string[] args)
         {
-
-            //Check PocketQueries, save any new data.
-            List<PocketQuery> queries = new WebExtractorPocketQuery().ExtractPocketQueries().ToList();
-
-            foreach (PocketQuery pocketQuery in queries)
+            
+            Task queriesParent = Task.Factory.StartNew(() =>
             {
-                using (SqlConnection conn = new SqlConnection())
-                {
-                    conn.ConnectionString = System.Configuration.ConfigurationManager.AppSettings["DBConnectionString"];
-                    conn.Open();
+                //Check PocketQueries, save any new data.
+                List<PocketQuery> queries = new WebExtractorPocketQuery().ExtractPocketQueries(websiteLock).ToList();
 
-                    pocketQuery.Save(conn);
-                }
-            }
+                Parallel.ForEach<PocketQuery>(queries, new ParallelOptions() { MaxDegreeOfParallelism = 3 }, pocketQuery =>
+                {
+                    using (SqlConnection conn = new SqlConnection())
+                    {
+                        conn.ConnectionString = System.Configuration.ConfigurationManager.AppSettings["DBConnectionString"];
+                        conn.Open();
+
+                        pocketQuery.Save(conn);
+                    }
+                });
+            });
+
+            queriesParent.Wait();
         }
     }
 }

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Data.SqlClient;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -30,7 +31,6 @@ namespace Geocaching
             add.Parameters.AddWithValue("Author", log.Author);
             add.Parameters.AddWithValue("Text", log.Text);
             add.Parameters.AddWithValue("TextEncoded", log.TextEncoded);
-
             add.ExecuteNonQuery();
         }
 
@@ -68,7 +68,24 @@ namespace Geocaching
             update.Parameters.AddWithValue("Text", log.Text);
             update.Parameters.AddWithValue("TextEncoded", log.TextEncoded);
             update.Parameters.AddWithValue("ID", log.ID);
-            update.ExecuteNonQuery();
+            update.CommandTimeout = 0;
+
+            bool ok = false;
+            while (!ok)
+            {
+                try
+                {
+                    update.ExecuteNonQuery();
+                    ok = true;
+                }
+                catch (SqlException e)
+                {
+                    if (e.Number == 1205) {
+                        Console.WriteLine("SQLEXCEPTION CAUGHT!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
+                        System.Threading.Thread.Sleep(10000);
+                    }
+                }
+            }
         }
 
         private SqlCommand CreateCommand()

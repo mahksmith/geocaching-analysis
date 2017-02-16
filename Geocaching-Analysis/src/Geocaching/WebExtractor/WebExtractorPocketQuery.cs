@@ -10,7 +10,7 @@ namespace Geocaching.WebExtractor
 {
     public class WebExtractorPocketQuery
     {
-        public IEnumerable<PocketQuery> ExtractPocketQueries(HttpClient client = null)
+        public IEnumerable<PocketQuery> ExtractPocketQueries(Object websiteLock, HttpClient client = null)
         {
             if (client == null)
             {
@@ -42,6 +42,7 @@ namespace Geocaching.WebExtractor
                 {
                     HttpClient = client
                 };
+                pocketQuery.WebsiteLock = websiteLock;
                 var columns = row.ChildNodes.Where(c => c.Name.Equals("td"));
 
                 if (columns.Count() < 6)

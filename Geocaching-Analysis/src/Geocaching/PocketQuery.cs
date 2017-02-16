@@ -70,6 +70,7 @@ namespace Geocaching
         [Key]
         public string Name { get; internal set; }
         public string Url { get; internal set; }
+        public Object WebsiteLock { get; internal set; }
         [NotMapped]
         public ZipArchive Zip
         {
@@ -86,14 +87,17 @@ namespace Geocaching
 
         public ZipArchive DownloadZip(HttpClient httpClient, string url)
         {
-            if (httpClient != null && url != null)
+            lock (WebsiteLock)
             {
-                Debug.WriteLine($"Downloading Pocket Query {Name}");
+                if (httpClient != null && url != null)
+                {
+                    Debug.WriteLine($"Downloading Pocket Query {Name}");
 
-                var result = httpClient.GetAsync(url);
-                result.Result.EnsureSuccessStatusCode();
+                    var result = httpClient.GetAsync(url);
+                    result.Result.EnsureSuccessStatusCode();
 
-                return new ZipArchive(result.Result.Content.ReadAsStreamAsync().Result);
+                    return new ZipArchive(result.Result.Content.ReadAsStreamAsync().Result);
+                }
             }
 
             return null;
@@ -215,6 +219,8 @@ namespace Geocaching
             }
             catch (Exception commit)
             {
+                Console.WriteLine("Commit Exception Type: {0}", commit.GetType());
+                Console.WriteLine("  Message: {0}", commit.Message);
                 //Commit failed, try rollback
                 try
                 {
@@ -222,10 +228,9 @@ namespace Geocaching
                 }
                 catch (Exception rollback)
                 {
-                    //TODO
+                    Console.WriteLine("Rollback Exception Type: {0}", rollback.GetType());
+                    Console.WriteLine("  Message: {0}", rollback.Message);
                 }
-
-                throw;
             }
         }
     }
