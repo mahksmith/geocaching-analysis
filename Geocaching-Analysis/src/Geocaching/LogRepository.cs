@@ -2,8 +2,6 @@
 using System.Collections.Generic;
 using System.Data.SqlClient;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Geocaching
 {
@@ -23,14 +21,8 @@ namespace Geocaching
             SqlCommand add = CreateCommand();
             add.CommandText = "INSERT INTO Logs(ID, GeocacheID, Date, Type, Author, Text, TextEncoded)" +
                 "VALUES(@ID, @GeocacheID, @Date, @Type, @Author, @Text, @TextEncoded);";
-            add.Parameters.AddWithValue("ID", log.ID);
-            add.Parameters.AddWithValue("GeocacheID", log.GeocacheID);
-            add.Parameters.AddWithValue("Date", log.Date);
-            add.Parameters.AddWithValue("Type", log.Type);
-            add.Parameters.AddWithValue("Author", log.Author);
-            add.Parameters.AddWithValue("Text", log.Text);
-            add.Parameters.AddWithValue("TextEncoded", log.TextEncoded);
 
+            add.Parameters.AddRange(parameterList(log));
             add.ExecuteNonQuery();
         }
 
@@ -49,6 +41,20 @@ namespace Geocaching
             throw new NotImplementedException();
         }
 
+        public SqlParameter[] parameterList(Log log)
+        {
+            List<SqlParameter> parameters = new List<SqlParameter>(7);
+            parameters.Add(new SqlParameter("GeocacheID", log.GeocacheID));
+            parameters.Add(new SqlParameter("Date", log.Date));
+            parameters.Add(new SqlParameter("Type", log.Type));
+            parameters.Add(new SqlParameter("Author", log.Author));
+            parameters.Add(new SqlParameter("Text", log.Text));
+            parameters.Add(new SqlParameter("TextEncoded", log.TextEncoded));
+            parameters.Add(new SqlParameter("ID", log.ID));
+
+            return parameters.ToArray();
+        }
+
         public void Update(Log log)
         {
             SqlCommand update = CreateCommand();
@@ -61,13 +67,7 @@ namespace Geocaching
                 "TextEncoded = @TextEncoded " +
                 "WHERE ID = @ID";
 
-            update.Parameters.AddWithValue("GeocacheID", log.GeocacheID);
-            update.Parameters.AddWithValue("Date", log.Date);
-            update.Parameters.AddWithValue("Type", log.Type);
-            update.Parameters.AddWithValue("Author", log.Author);
-            update.Parameters.AddWithValue("Text", log.Text);
-            update.Parameters.AddWithValue("TextEncoded", log.TextEncoded);
-            update.Parameters.AddWithValue("ID", log.ID);
+            update.Parameters.AddRange(parameterList(log));
             update.ExecuteNonQuery();
         }
 
