@@ -51,24 +51,32 @@ namespace Geocaching
 
         public void Update(Log log)
         {
-            SqlCommand update = CreateCommand();
-            update.CommandText = "UPDATE Logs SET " +
-                "GeocacheID = @GeocacheID, " +
-                "Date = @Date, " +
-                "Type = @Type, " +
-                "Author = @Author, " +
-                "Text = @Text, " +
-                "TextEncoded = @TextEncoded " +
-                "WHERE ID = @ID";
+            Update(log, 0);
+        }
 
-            update.Parameters.AddWithValue("GeocacheID", log.GeocacheID);
-            update.Parameters.AddWithValue("Date", log.Date);
-            update.Parameters.AddWithValue("Type", log.Type);
-            update.Parameters.AddWithValue("Author", log.Author);
-            update.Parameters.AddWithValue("Text", log.Text);
-            update.Parameters.AddWithValue("TextEncoded", log.TextEncoded);
-            update.Parameters.AddWithValue("ID", log.ID);
-            update.CommandTimeout = 0;
+        public void Update(Log log, int attempt = 0, SqlCommand update = null)
+        {
+            if (update.Equals(null))
+            {
+                update = CreateCommand();
+                update.CommandText = "UPDATE Logs SET " +
+                    "GeocacheID = @GeocacheID, " +
+                    "Date = @Date, " +
+                    "Type = @Type, " +
+                    "Author = @Author, " +
+                    "Text = @Text, " +
+                    "TextEncoded = @TextEncoded " +
+                    "WHERE ID = @ID";
+
+                update.Parameters.AddWithValue("GeocacheID", log.GeocacheID);
+                update.Parameters.AddWithValue("Date", log.Date);
+                update.Parameters.AddWithValue("Type", log.Type);
+                update.Parameters.AddWithValue("Author", log.Author);
+                update.Parameters.AddWithValue("Text", log.Text);
+                update.Parameters.AddWithValue("TextEncoded", log.TextEncoded);
+                update.Parameters.AddWithValue("ID", log.ID);
+                update.CommandTimeout = 0;
+            }
 
             bool ok = false;
             while (!ok)
@@ -80,10 +88,13 @@ namespace Geocaching
                 }
                 catch (SqlException e)
                 {
-                    if (e.Number == 1205) {
-                        Console.WriteLine("SQLEXCEPTION CAUGHT!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
-                        System.Threading.Thread.Sleep(10000);
+                    if (e.Number == 1205) //Deadlock
+                    {
+                        Console.WriteLine("SQLEXCEPTION CAUGHT");
+                        Update(log, attempt++, update);
                     }
+                    else
+                        throw;
                 }
             }
         }
