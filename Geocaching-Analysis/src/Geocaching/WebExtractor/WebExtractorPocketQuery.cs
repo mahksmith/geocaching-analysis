@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Diagnostics;
+using HtmlAgilityPack;
 
 namespace Geocaching.WebExtractor
 {
@@ -69,8 +70,8 @@ namespace Geocaching.WebExtractor
         public bool QueueMyFinds(WebExtractor webExtractor)
         {
             //System.Configuration.ConfigurationManager.AppSettings[""
-            HtmlAgilityPack.HtmlDocument website = webExtractor.GetPage("/pocket/default.aspx");
-            HtmlAgilityPack.HtmlNode node = website
+            HtmlDocument website = webExtractor.GetPage("/pocket/default.aspx");
+            HtmlNode node = website
                 .GetElementbyId("ctl00_ContentBody_PQListControl1_btnScheduleNow");
 
             if (node != null)
@@ -79,24 +80,9 @@ namespace Geocaching.WebExtractor
 
                 if (attr == null || !attr.Value.Equals("disabled"))
                 {
-                    // Object is not disabled. Need to copy Viewstate information across. Create the formContent and Post.
-                    List<KeyValuePair<string, string>> formContent = new List<KeyValuePair<string, string>>();
+                    // Button is not disabled. Need to copy Viewstate information across. Create the formContent and Post.
+                    List<KeyValuePair<string, string>> formContent = webExtractor.GetCurrentViewStates();
 
-                    formContent.Add(new KeyValuePair<string, string>("__EVENTTARGET", website.GetElementbyId("__EVENTTARGET").ChildAttributes("value").First().Value));
-                    formContent.Add(new KeyValuePair<string, string>("__EVENTARGUMENT", website.GetElementbyId("__EVENTARGUMENT").ChildAttributes("value").First().Value));
-                    formContent.Add(new KeyValuePair<string, string>("__VIEWSTATEFIELDCOUNT", website.GetElementbyId("__VIEWSTATEFIELDCOUNT").ChildAttributes("value").First().Value));
-
-                    int viewStateFieldCountN = Convert.ToInt32(website.GetElementbyId("__VIEWSTATEFIELDCOUNT").ChildAttributes("value").First().Value);
-                    List<HtmlAgilityPack.HtmlNode> viewStates = new List<HtmlAgilityPack.HtmlNode>();
-                    for (int i = 0; i < viewStateFieldCountN; i++)
-                    {
-                        if (i == 0)
-                            formContent.Add(new KeyValuePair<string, string>("__VIEWSTATE", website.GetElementbyId("__VIEWSTATE").ChildAttributes("value").First().Value));
-                        else
-                            formContent.Add(new KeyValuePair<string, string>($"__VIEWSTATE{i}", website.GetElementbyId($"__VIEWSTATE{i}").ChildAttributes("value").First().Value));
-                    }
-
-                    formContent.Add(new KeyValuePair<string, string>("__VIEWSTATEGENERATOR", website.GetElementbyId("__VIEWSTATEGENERATOR").ChildAttributes("value").First().Value));
                     formContent.Add(new KeyValuePair<string, string>("ctl00$ContentBody$PQListControl1$btnScheduleNow", "Add to Queue"));
                     formContent.Add(new KeyValuePair<string, string>("ctl00$ContentBody$PQListControl1$hidIds", String.Empty));
                     formContent.Add(new KeyValuePair<string, string>("ctl00$ContentBody$PQDownloadList$hidIds", String.Empty));
@@ -108,7 +94,13 @@ namespace Geocaching.WebExtractor
 
                     //Need to check for success message!
                     //<p class="Success">Your 'My Finds' Pocket Query has been scheduled to run.</p>
-                    //Possibly also add this to the queue in three days time..
+                    HtmlNode successMessage = website.DocumentNode.SelectNodes(String.Format("//p[@class='{0}']", "Success")).FirstOrDefault();
+                    if (successMessage != null)
+                    {
+                        return true;
+                    }
+
+                    //TODO: Possibly also add this to the queue in three days time..
                 }
             }
 

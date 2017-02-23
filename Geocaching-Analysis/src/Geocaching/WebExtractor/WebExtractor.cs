@@ -12,6 +12,7 @@ namespace Geocaching.WebExtractor
     public class WebExtractor
     {
         private HttpClient _client;
+        private HtmlDocument _currentPage;
 
         public HttpClient Client
         {
@@ -28,10 +29,16 @@ namespace Geocaching.WebExtractor
             }
         }
 
-        public HtmlDocument GetPage(string webpage)
-        {            
+        public HtmlDocument GetPage(string url)
+        {
+            _currentPage = this.RetrievePage(url);
+            return _currentPage;
+        }
+
+        private HtmlDocument RetrievePage(string url)
+        {
             Debug.WriteLine("Accessing Geocaching Page..");
-            var task = Client.GetAsync(webpage);
+            var task = Client.GetAsync(url);
             task.Result.EnsureSuccessStatusCode();
 
             /* Check if already logged in */
@@ -49,7 +56,7 @@ namespace Geocaching.WebExtractor
             Debug.WriteLine("Logging in..");
 
             string logInPage = GetLogInURL(document);
-            
+
             //Navigate to LogIn Page
             if (logInPage.Equals(String.Empty))
             {
@@ -98,10 +105,6 @@ namespace Geocaching.WebExtractor
                     new KeyValuePair<string, string>("Password", System.Configuration.ConfigurationManager.AppSettings["GeocachingPassword"])
             });
 
-
-            //string user = System.Configuration.ConfigurationManager.AppSettings["GeocachingUsername"];
-            //string pass = System.Configuration.ConfigurationManager.AppSettings["GeocachingPassword"];
-
             Debug.WriteLine("Actually Logging In..");
             task = Client.PostAsync(logInPage, formContent);
             var read = task.Result.Content.ReadAsStringAsync();
@@ -110,6 +113,40 @@ namespace Geocaching.WebExtractor
             doc.Load(task.Result.Content.ReadAsStreamAsync().Result);
 
             return doc;
+        }
+
+        internal List<KeyValuePair<string, string>> GetCurrentViewStates()
+        {
+            List<KeyValuePair<string, string>> formKeyValues = new List<KeyValuePair<string, string>>();
+
+            formKeyValues.Add(CreateKeyValuePairForElementValue("__EVENTTARGET"));
+            formKeyValues.Add(CreateKeyValuePairForElementValue("__EVENTARGUMENT"));
+            formKeyValues.Add(CreateKeyValuePairForElementValue("__VIEWSTATEFIELDCOUNT"));
+
+            int viewStateFieldCountN = Convert.ToInt32(GetElementValueFromCurrentPage("__VIEWSTATEFIELDCOUNT"));
+
+            List<HtmlNode> viewStates = new List<HtmlNode>();
+            for (int i = 0; i < viewStateFieldCountN; i++)
+            {
+                if (i == 0)
+                    formKeyValues.Add(CreateKeyValuePairForElementValue("__VIEWSTATE"));
+                else
+                    formKeyValues.Add(CreateKeyValuePairForElementValue($"__VIEWSTATE{i}"));
+            }
+
+            formKeyValues.Add(CreateKeyValuePairForElementValue("__VIEWSTATEGENERATOR"));
+
+            return formKeyValues;
+        }
+        
+        private KeyValuePair<string, string> CreateKeyValuePairForElementValue(string ID)
+        {
+            return new KeyValuePair<string, string>(ID, GetElementValueFromCurrentPage(ID));
+        }
+
+        private string GetElementValueFromCurrentPage(string ID)
+        {
+            return _currentPage.GetElementbyId(ID).ChildAttributes("value").First().Value);
         }
 
         private string ExtractRequestVerificationToken(Task<HttpResponseMessage> pageResult)
