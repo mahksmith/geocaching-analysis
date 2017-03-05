@@ -94,11 +94,11 @@ namespace Geocaching.WebExtractor
 
                     //Need to check for success message!
                     //<p class="Success">Your 'My Finds' Pocket Query has been scheduled to run.</p>
-                    HtmlNode successMessage = website.DocumentNode.SelectNodes(String.Format("//p[@class='{0}']", "Success")).FirstOrDefault();
-                    if (successMessage != null)
-                    {
-                        return true;
-                    }
+                    //HtmlNode successMessage = website.DocumentNode.SelectNodes(String.Format("//p[@class='{0}']", "Success")).FirstOrDefault();
+                    //if (successMessage != null)
+                    //{
+                    //    return true;
+                    //}
 
                     //TODO: Possibly also add this to the queue in three days time..
                 }
