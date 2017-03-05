@@ -117,12 +117,12 @@ namespace Geocaching.WebExtractor
 
         internal List<KeyValuePair<string, string>> GetCurrentViewStates()
         {
-            List<KeyValuePair<string, string>> formKeyValues = new List<KeyValuePair<string, string>>();
-
-            formKeyValues.Add(CreateKeyValuePairForElementValue("__EVENTTARGET"));
-            formKeyValues.Add(CreateKeyValuePairForElementValue("__EVENTARGUMENT"));
-            formKeyValues.Add(CreateKeyValuePairForElementValue("__VIEWSTATEFIELDCOUNT"));
-
+            List<KeyValuePair<string, string>> formKeyValues = new List<KeyValuePair<string, string>>
+            {
+                CreateKeyValuePairForElementValue("__EVENTTARGET"),
+                CreateKeyValuePairForElementValue("__EVENTARGUMENT"),
+                CreateKeyValuePairForElementValue("__VIEWSTATEFIELDCOUNT")
+            };
             int viewStateFieldCountN = Convert.ToInt32(GetElementValueFromCurrentPage("__VIEWSTATEFIELDCOUNT"));
 
             List<HtmlNode> viewStates = new List<HtmlNode>();
@@ -146,7 +146,7 @@ namespace Geocaching.WebExtractor
 
         private string GetElementValueFromCurrentPage(string ID)
         {
-            return _currentPage.GetElementbyId(ID).ChildAttributes("value").First().Value);
+            return _currentPage.GetElementbyId(ID).ChildAttributes("value").First().Value;
         }
 
         private string ExtractRequestVerificationToken(Task<HttpResponseMessage> pageResult)
