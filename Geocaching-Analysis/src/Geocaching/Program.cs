@@ -1,11 +1,9 @@
 ﻿using Geocaching.WebExtractor;
 using System;
 using System.Collections.Generic;
-using System.Data;
 using System.Data.SqlClient;
 using System.Diagnostics;
 using System.Linq;
-using System.Text;
 
 namespace Geocaching
 {
@@ -13,9 +11,15 @@ namespace Geocaching
     {
         static void Main(string[] args)
         {
+            WebExtractor.WebExtractor extractor = new WebExtractor.WebExtractor();
+
+
+            //See if we can interact with the Add To Queue button
+            bool test = new WebExtractorPocketQuery().QueueMyFinds(extractor);
+
 
             //Check PocketQueries, save any new data.
-            List<PocketQuery> queries = new WebExtractorPocketQuery().ExtractPocketQueries().ToList();
+            List<PocketQuery> queries = new WebExtractorPocketQuery().ExtractPocketQueries(extractor).ToList();
 
             foreach (PocketQuery pocketQuery in queries)
             {
@@ -26,6 +30,13 @@ namespace Geocaching
 
                     pocketQuery.Save(conn);
                 }
+            }
+
+
+            if (Debugger.IsAttached)
+            {
+                Debug.WriteLine("Finished");
+                Console.ReadLine();
             }
         }
     }

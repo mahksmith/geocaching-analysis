@@ -1,26 +1,16 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Net;
-using System.Net.Http;
 using System.Diagnostics;
-using System.Threading.Tasks;
+using HtmlAgilityPack;
 
 namespace Geocaching.WebExtractor
 {
     public class WebExtractorPocketQuery
     {
-        public IEnumerable<PocketQuery> ExtractPocketQueries(HttpClient client = null)
+        public IEnumerable<PocketQuery> ExtractPocketQueries(WebExtractor webExtractor)
         {
-            if (client == null)
-            {
-                Uri baseAddress = new Uri("https://www.geocaching.com/");
-                CookieContainer cookieContainer = new CookieContainer();
-                HttpClientHandler handler = new HttpClientHandler() { CookieContainer = cookieContainer };
-                client = new HttpClient(handler) { BaseAddress = baseAddress };
-            }
-
-            HtmlAgilityPack.HtmlDocument result = LogIn("/account/login?returnUrl=%2Fpocket%2F", client);
+            HtmlAgilityPack.HtmlDocument result = webExtractor.GetPage("/pocket/");
 
             //Iterate over each Pocket Query to get the download strings. The fourth one should have the "<a href"
             Debug.WriteLine("Extracting PocketQueries");
@@ -33,14 +23,14 @@ namespace Geocaching.WebExtractor
 
 
             var rows = table.ChildNodes.Where(row => row.Name.Equals("tr"));
-            
+
             List<PocketQuery> pocketQueries = new List<PocketQuery>();
 
             foreach (var row in rows)
             {
                 PocketQuery pocketQuery = new PocketQuery()
                 {
-                    HttpClient = client
+                    HttpClient = webExtractor.Client
                 };
                 var columns = row.ChildNodes.Where(c => c.Name.Equals("td"));
 
@@ -76,49 +66,45 @@ namespace Geocaching.WebExtractor
             return pocketQueries;
         }
 
-        private HtmlAgilityPack.HtmlDocument LogIn(string logInPage, HttpClient client)
+
+        public bool QueueMyFinds(WebExtractor webExtractor)
         {
-            Debug.WriteLine("Accessing Geocaching Login..");
-            var pageResult = client.GetAsync(logInPage);
-            pageResult.Result.EnsureSuccessStatusCode();
+            //System.Configuration.ConfigurationManager.AppSettings[""
+            HtmlDocument website = webExtractor.GetPage("/pocket/default.aspx");
+            HtmlNode node = website
+                .GetElementbyId("ctl00_ContentBody_PQListControl1_btnScheduleNow");
 
-            Debug.WriteLine("Extracting Form Information..");
-            string requestVerificationToken = ExtractRequestVerificationToken(pageResult);
-
-            //string needs to be of the form
-            //__RequestVerificationToken=[requestVerificationToken]&Username=[username]&Password=[password]
-            var formContent = new FormUrlEncodedContent(new[]
+            if (node != null)
             {
-                    new KeyValuePair<string, string>("__RequestVerificationToken", requestVerificationToken),
-                    new KeyValuePair<string, string>("Username", System.Configuration.ConfigurationManager.AppSettings["GeocachingUsername"]),
-                    new KeyValuePair<string, string>("Password", System.Configuration.ConfigurationManager.AppSettings["GeocachingPassword"])
-            });
+                HtmlAgilityPack.HtmlAttribute attr = node.ChildAttributes("disabled").FirstOrDefault();
 
+                if (attr == null || !attr.Value.Equals("disabled"))
+                {
+                    // Button is not disabled. Need to copy Viewstate information across. Create the formContent and Post.
+                    List<KeyValuePair<string, string>> formContent = webExtractor.GetCurrentViewStates();
 
-            string user = System.Configuration.ConfigurationManager.AppSettings["GeocachingUsername"];
-            string pass = System.Configuration.ConfigurationManager.AppSettings["GeocachingPassword"];
+                    formContent.Add(new KeyValuePair<string, string>("ctl00$ContentBody$PQListControl1$btnScheduleNow", "Add to Queue"));
+                    formContent.Add(new KeyValuePair<string, string>("ctl00$ContentBody$PQListControl1$hidIds", String.Empty));
+                    formContent.Add(new KeyValuePair<string, string>("ctl00$ContentBody$PQDownloadList$hidIds", String.Empty));
 
-            Debug.WriteLine("Logging in..");
-            var task = client.PostAsync(logInPage, formContent);
-            var read = task.Result.Content.ReadAsStringAsync();
+                    var formURLEncodedContent = new System.Net.Http.FormUrlEncodedContent(formContent);
+                    
+                    var task = webExtractor.Client.PostAsync("/pocket/default.aspx", formURLEncodedContent);
+                    var read = task.Result.Content.ReadAsStringAsync().Result;
 
-            HtmlAgilityPack.HtmlDocument doc = new HtmlAgilityPack.HtmlDocument();
-            doc.Load(task.Result.Content.ReadAsStreamAsync().Result);
+                    //Need to check for success message!
+                    //<p class="Success">Your 'My Finds' Pocket Query has been scheduled to run.</p>
+                    //HtmlNode successMessage = website.DocumentNode.SelectNodes(String.Format("//p[@class='{0}']", "Success")).FirstOrDefault();
+                    //if (successMessage != null)
+                    //{
+                    //    return true;
+                    //}
 
-            return doc;
-        }
+                    //TODO: Possibly also add this to the queue in three days time..
+                }
+            }
 
-        private string ExtractRequestVerificationToken(Task<HttpResponseMessage> pageResult)
-        {
-            //<input name="__RequestVerificationToken" type="hidden" value="[value]">
-            var restest = pageResult.Result.Content.ReadAsStringAsync();
-            int startIndex = restest.Result.IndexOf("<input name=\"__RequestVerificationToken");
-            int endIndex = restest.Result.IndexOf('>', startIndex + 1);
-
-            string[] tokens = restest.Result.Substring(startIndex, endIndex - startIndex).Split(' ');
-            tokens = tokens[3].Split('\"');
-
-            return tokens[1];
+            return false;
         }
     }
 }
