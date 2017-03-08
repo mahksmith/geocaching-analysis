@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Data.SqlClient;
 using System.Linq;
 
@@ -109,33 +110,33 @@ namespace Geocaching
 
         public SqlParameter[] parameterList(Geocache geocache)
         {
-            List<SqlParameter> parameters = new List<SqlParameter>(24);
-
-            parameters.Add(new SqlParameter("Name", geocache.Name));
-            parameters.Add(new SqlParameter("CacheID", geocache.CacheID));
-            parameters.Add(new SqlParameter("Country", geocache.Country));
-            parameters.Add(new SqlParameter("Description", geocache.Description));
-            parameters.Add(new SqlParameter("Difficulty", geocache.Difficulty));
-            parameters.Add(new SqlParameter("LongDescription", geocache.LongDescription));
-            parameters.Add(new SqlParameter("Owner", geocache.Owner));
-            parameters.Add(new SqlParameter("ShortDescription", geocache.ShortDescription));
-            parameters.Add(new SqlParameter("Size", geocache.Size));
-            parameters.Add(new SqlParameter("State", geocache.State));
-            parameters.Add(new SqlParameter("StatusArchived", geocache.StatusArchived));
-            parameters.Add(new SqlParameter("StatusAvailable", geocache.StatusAvailable));
-            parameters.Add(new SqlParameter("Symbol", geocache.Symbol));
-            parameters.Add(new SqlParameter("SymbolType", geocache.SymbolType));
-            parameters.Add(new SqlParameter("Terrain", geocache.Terrain));
-            parameters.Add(new SqlParameter("Time", geocache.Time));
-            parameters.Add(new SqlParameter("Type", geocache.Type));
-            parameters.Add(new SqlParameter("URL", geocache.URL));
-            parameters.Add(new SqlParameter("URLName", geocache.URLName));
-            parameters.Add(new SqlParameter("Latitude", geocache.Latitude));
-            parameters.Add(new SqlParameter("Longitude", geocache.Longitude));
-            parameters.Add(new SqlParameter("Altitude", geocache.Altitude));
-            parameters.Add(new SqlParameter("LastChanged", geocache.LastChanged));
-            parameters.Add(new SqlParameter("GeocacheID", geocache.GeocacheID));
-
+            List<SqlParameter> parameters = new List<SqlParameter>(24)
+            {
+                new SqlParameter("Name", geocache.Name),
+                new SqlParameter("CacheID", geocache.CacheID),
+                new SqlParameter("Country", geocache.Country),
+                new SqlParameter("Description", geocache.Description),
+                new SqlParameter("Difficulty", geocache.Difficulty),
+                new SqlParameter("LongDescription", geocache.LongDescription),
+                new SqlParameter("Owner", geocache.Owner),
+                new SqlParameter("ShortDescription", geocache.ShortDescription),
+                new SqlParameter("Size", geocache.Size),
+                new SqlParameter("State", geocache.State),
+                new SqlParameter("StatusArchived", geocache.StatusArchived),
+                new SqlParameter("StatusAvailable", geocache.StatusAvailable),
+                new SqlParameter("Symbol", geocache.Symbol),
+                new SqlParameter("SymbolType", geocache.SymbolType),
+                new SqlParameter("Terrain", geocache.Terrain),
+                new SqlParameter("Time", geocache.Time),
+                new SqlParameter("Type", geocache.Type),
+                new SqlParameter("URL", geocache.URL),
+                new SqlParameter("URLName", geocache.URLName),
+                new SqlParameter("Latitude", geocache.Latitude),
+                new SqlParameter("Longitude", geocache.Longitude),
+                new SqlParameter("Altitude", geocache.Altitude),
+                new SqlParameter("LastChanged", geocache.LastChanged),
+                new SqlParameter("GeocacheID", geocache.GeocacheID)
+            };
             return parameters.ToArray();
         }
     }
