@@ -1,7 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations;
-using System.ComponentModel.DataAnnotations.Schema;
 using System.Device.Location;
 
 namespace Geocaching
@@ -17,7 +15,6 @@ namespace Geocaching
         }
 
         public string CacheID { get; internal set; }
-        [Key]
         public string GeocacheID { get; internal set; }
         public string Country { get; internal set; }
         public string Description { get; internal set; }
@@ -46,10 +43,8 @@ namespace Geocaching
     {
         private string _GeocacheID;
 
-        [Key, DatabaseG‌​enerated(DatabaseGen‌​eratedOption.None)]
         public Int64 ID { get; internal set; }
         public string GeocacheID { get; internal set; }
-        [ForeignKey("GeocacheID")]
         public virtual Geocache ParentGeocache { get; internal set; }
         public DateTime Date { get; internal set; }
         public String Type { get; internal set; }
