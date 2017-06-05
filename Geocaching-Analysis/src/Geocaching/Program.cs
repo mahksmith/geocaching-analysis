@@ -24,13 +24,18 @@ namespace Geocaching
                     {
                         conn.ConnectionString = System.Configuration.ConfigurationManager.AppSettings["DBConnectionString"];
                         conn.Open();
-
                         pocketQuery.Save(conn);
                     }
                 });
             });
 
             queriesParent.Wait();
+
+            if (System.Diagnostics.Debugger.IsAttached)
+            {
+                Console.WriteLine("Finished, press any key (debug)");
+                Console.ReadKey();
+            }
         }
     }
 }

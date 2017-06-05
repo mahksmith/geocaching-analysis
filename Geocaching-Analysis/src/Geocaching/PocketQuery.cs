@@ -50,6 +50,8 @@ namespace Geocaching
                 {
                     return _gpxGeocaches;
                 }
+
+                if (Zip == null) return null;
                 return _gpxGeocaches = ExtractGpx(Zip, FileType.Geocaches);
             }
         }
@@ -61,6 +63,7 @@ namespace Geocaching
                 {
                     return _gpxWaypoints;
                 }
+                if (Zip == null) return null;
                 return _gpxWaypoints = ExtractGpx(Zip, FileType.Waypoints);
             }
         }
@@ -80,6 +83,7 @@ namespace Geocaching
                 {
                     return _zip;
                 }
+                if (Url == null) return null;
                 return _zip = DownloadZip(HttpClient, Url);
             }
 
@@ -132,7 +136,7 @@ namespace Geocaching
         {
             Debug.WriteLine($"Unzipping {Name}: {entry.Name}");
 
-            return (new System.IO.StreamReader(entry.Open())).ReadToEnd();
+            return (new StreamReader(entry.Open())).ReadToEnd();
         }
 
         public void Save(SqlConnection connection)
@@ -202,9 +206,13 @@ namespace Geocaching
                 {
                     DataRow logRow = logDataTable.Select(String.Format("GeocacheID = '{0}' AND ID = '{1}'", log.GeocacheID, log.ID)).FirstOrDefault();
                     if (logRow != null)
-                        logRepo.Update(log);
+                    {
+                        if (DateTime.Parse(row["LastChanged"].ToString()) < log.LastChanged)
+                            logRepo.Update(log);
+                    }
                     else
                         logRepo.Add(log);
+                    
                 }
             }
 
@@ -221,7 +229,6 @@ namespace Geocaching
             {
                 Console.WriteLine("Commit Exception Type: {0}", commit.GetType());
                 Console.WriteLine("  Message: {0}", commit.Message);
-                //Commit failed, try rollback
                 try
                 {
                     transaction.Rollback();

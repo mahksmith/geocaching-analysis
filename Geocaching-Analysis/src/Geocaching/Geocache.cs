@@ -56,6 +56,7 @@ namespace Geocaching
         public String Author { get; internal set; }
         public String Text { get; internal set; }
         public Boolean TextEncoded { get; internal set; }
+        public DateTime LastChanged { get; internal set; }
         public Log(Geocache parent)
         {
             ParentGeocache = parent;

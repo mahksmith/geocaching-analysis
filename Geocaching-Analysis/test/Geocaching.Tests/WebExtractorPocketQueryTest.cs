@@ -1,4 +1,5 @@
-﻿using NUnit.Framework;
+﻿using Geocaching.WebExtractor;
+using NUnit.Framework;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -12,7 +13,8 @@ namespace Geocaching.Tests
         {
             WebExtractorPocketQuery test = new WebExtractorPocketQuery();
 
-            List<PocketQuery> queries = test.ExtractPocketQueries().ToList();
+            System.Object websiteLock = new System.Object();
+            List<PocketQuery> queries = test.ExtractPocketQueries(websiteLock).ToList();
             Assert.NotNull(queries);
             Assert.NotZero(queries.Count());
 

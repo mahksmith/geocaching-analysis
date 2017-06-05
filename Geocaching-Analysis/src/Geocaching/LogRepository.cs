@@ -17,17 +17,52 @@ namespace Geocaching
 
         public void Add(Log log)
         {
-            SqlCommand add = CreateCommand();
-            add.CommandText = "INSERT INTO Logs(ID, GeocacheID, Date, Type, Author, Text, TextEncoded)" +
-                "VALUES(@ID, @GeocacheID, @Date, @Type, @Author, @Text, @TextEncoded);";
-            add.Parameters.AddWithValue("ID", log.ID);
-            add.Parameters.AddWithValue("GeocacheID", log.GeocacheID);
-            add.Parameters.AddWithValue("Date", log.Date);
-            add.Parameters.AddWithValue("Type", log.Type);
-            add.Parameters.AddWithValue("Author", log.Author);
-            add.Parameters.AddWithValue("Text", log.Text);
-            add.Parameters.AddWithValue("TextEncoded", log.TextEncoded);
-            add.ExecuteNonQuery();
+            Add(log, 0);
+        }
+
+        public void Add(Log log, int attempt = 0, SqlCommand add = null)
+        {
+            if (add == null)
+            {
+                add = CreateCommand();
+                add.CommandText = "INSERT INTO Logs(ID, GeocacheID, Date, Type, Author, Text, TextEncoded)" +
+                    "VALUES(@ID, @GeocacheID, @Date, @Type, @Author, @Text, @TextEncoded);";
+                add.Parameters.AddWithValue("ID", log.ID);
+                add.Parameters.AddWithValue("GeocacheID", log.GeocacheID);
+                add.Parameters.AddWithValue("Date", log.Date);
+                add.Parameters.AddWithValue("Type", log.Type);
+                add.Parameters.AddWithValue("Author", log.Author);
+                add.Parameters.AddWithValue("Text", log.Text);
+                add.Parameters.AddWithValue("TextEncoded", log.TextEncoded);
+            }
+
+            //TODO: we should have already checked for existance in database previously, however, we still might need to run update if a deadlock occurs on Add.
+            bool ok = false;
+            while (!ok)
+            {
+                try
+                {
+                    add.ExecuteNonQuery();
+                    ok = true;
+                }
+                catch (SqlException e)
+                {
+                    if (e.Number == 1205) //Deadlock
+                    {
+                        Console.WriteLine("SQLEXCEPTION CAUGHT IN ADD");
+                        Add(log, attempt++, add);
+                    }
+
+                    //check for primary key constraint! Numbers 2627 and 2601
+                    else if (e.Number == 2627 || e.Number == 2601)
+                    {
+                        Console.WriteLine("Duplicate Key on Add!");
+                        Update(log);
+                    }
+                    else
+                        throw;
+                }
+            }
         }
 
         public IQueryable<Log> All()
@@ -86,7 +121,8 @@ namespace Geocaching
                 {
                     if (e.Number == 1205) //Deadlock
                     {
-                        Console.WriteLine("SQLEXCEPTION CAUGHT");
+                        Console.WriteLine("SQLEXCEPTION CAUGHT IN UPDATE");
+                        
                         Update(log, attempt++, update);
                     }
                     else
@@ -100,6 +136,11 @@ namespace Geocaching
             SqlCommand command = _connection.CreateCommand();
             command.Transaction = _transaction;
             return command;
+        }
+
+        private void handleDeadLockException()
+        {
+
         }
     }
 }
