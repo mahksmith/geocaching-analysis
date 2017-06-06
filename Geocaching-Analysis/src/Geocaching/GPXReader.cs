@@ -88,6 +88,7 @@ namespace Geocaching
                     log.Text = l.Element(gs + "text").Value;
                     /* text encoded */
                     log.TextEncoded = Boolean.Parse(l.Element(gs + "text").FirstAttribute.Value);
+                    log.LastChanged = geocache.LastChanged;
 
 
 

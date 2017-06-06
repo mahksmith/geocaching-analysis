@@ -1,6 +1,6 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Data.SqlClient;
+using System.Diagnostics;
 using System.Linq;
 
 namespace Geocaching
@@ -19,13 +19,71 @@ namespace Geocaching
 
         public void Add(Geocache geocache)
         {
-            SqlCommand add = CreateCommand();
+            Add(geocache, 0);
+        }
 
-            add.CommandText = "INSERT INTO Geocaches(Name, CacheID, Country, Description, Difficulty, LongDescription, Owner, ShortDescription, Size, State, StatusArchived, StatusAvailable, Symbol, SymbolType, Terrain, Time, Type, URL, URLName, Latitude, Longitude, Altitude, LastChanged, GeocacheID)" +
-                "VALUES(@Name, @CacheID, @Country, @Description, @Difficulty, @LongDescription, @Owner, @ShortDescription, @Size, @State, @StatusArchived, @StatusAvailable, @Symbol, @SymbolType, @Terrain, @Time, @Type, @URL, @URLName, @Latitude, @Longitude, @Altitude, @LastChanged, @GeocacheID)";
+        private void Add(Geocache geocache, int attempt = 0, SqlCommand add = null)
+        {
+            if (add == null) {
+                add = CreateCommand();
 
-            add.Parameters.AddRange(parameterList(geocache));
-            add.ExecuteNonQuery();
+                add.CommandText = "INSERT INTO Geocaches(Name, CacheID, Country, Description, Difficulty, LongDescription, Owner, ShortDescription, Size, State, StatusArchived, StatusAvailable, Symbol, SymbolType, Terrain, Time, Type, URL, URLName, Latitude, Longitude, Altitude, LastChanged, GeocacheID)" +
+                    "VALUES(@Name, @CacheID, @Country, @Description, @Difficulty, @LongDescription, @Owner, @ShortDescription, @Size, @State, @StatusArchived, @StatusAvailable, @Symbol, @SymbolType, @Terrain, @Time, @Type, @URL, @URLName, @Latitude, @Longitude, @Altitude, @LastChanged, @GeocacheID)";
+
+                add.Parameters.AddWithValue("@Name", geocache.Name);
+                add.Parameters.AddWithValue("@CacheID", geocache.CacheID);
+                add.Parameters.AddWithValue("@Country", geocache.Country);
+                add.Parameters.AddWithValue("@Description", geocache.Description);
+                add.Parameters.AddWithValue("@Difficulty", geocache.Difficulty);
+                add.Parameters.AddWithValue("@LongDescription", geocache.LongDescription);
+                add.Parameters.AddWithValue("@Owner", geocache.Owner);
+                add.Parameters.AddWithValue("@ShortDescription", geocache.ShortDescription);
+                add.Parameters.AddWithValue("@Size", geocache.Size);
+                add.Parameters.AddWithValue("@State", geocache.State);
+                add.Parameters.AddWithValue("@StatusArchived", geocache.StatusArchived);
+                add.Parameters.AddWithValue("@StatusAvailable", geocache.StatusAvailable);
+                add.Parameters.AddWithValue("@Symbol", geocache.Symbol);
+                add.Parameters.AddWithValue("@SymbolType", geocache.SymbolType);
+                add.Parameters.AddWithValue("@Terrain", geocache.Terrain);
+                add.Parameters.AddWithValue("@Time", geocache.Time);
+                add.Parameters.AddWithValue("@Type", geocache.Type);
+                add.Parameters.AddWithValue("@URL", geocache.URL);
+                add.Parameters.AddWithValue("@URLName", geocache.URLName);
+                add.Parameters.AddWithValue("@Latitude", geocache.Latitude);
+                add.Parameters.AddWithValue("@Longitude", geocache.Longitude);
+                add.Parameters.AddWithValue("@Altitude", geocache.Altitude);
+                add.Parameters.AddWithValue("@LastChanged", geocache.LastChanged);
+                add.Parameters.AddWithValue("@GeocacheID", geocache.GeocacheID);
+            }
+            
+            bool ok = false;
+            while (!ok)
+            {
+                try
+                {
+                    add.ExecuteNonQuery();
+                    ok = true;
+                }
+                catch (SqlException e)
+                {
+                    if (e.Number == 1205) //Deadlock
+                    {
+                        Console.WriteLine($"Attempting to Add {geocache.CacheID}, attempt {attempt++}");
+                        //System.Threading.Thread.Sleep(new Random().Next(5000));
+                        Add(geocache, attempt, add);
+                    }
+
+                    //TODO document what these numbers refer to...
+                    else if (e.Number == 2627 || e.Number == 2601)
+                    {
+                        Console.WriteLine($"Geocache: Duplicate Key {geocache.CacheID}");
+                        Update(geocache);
+                        ok = true;          // Required, will loop infinitely..
+                    }
+                    else
+                        throw;
+                }
+            }
         }
 
         public IQueryable<Geocache> All()
@@ -40,35 +98,85 @@ namespace Geocaching
 
         public void Update(Geocache geocache)
         {
-            SqlCommand update = CreateCommand();
-            update.CommandText = "UPDATE Geocaches SET " +
-                "Name = @Name," +
-                "CacheID = @CacheID, " +
-                "Country = @Country," +
-                "Description = @Description," +
-                "Difficulty = @Difficulty," +
-                "LongDescription = @LongDescription, " +
-                "Owner = @Owner, " +
-                "ShortDescription = @ShortDescription, " +
-                "Size = @Size, " +
-                "State = @State, " +
-                "StatusArchived = @StatusArchived, " +
-                "StatusAvailable = @StatusAvailable, " +
-                "Symbol = @Symbol, " +
-                "SymbolType = @SymbolType, " +
-                "Terrain = @Terrain, " +
-                "Time = @Time, " +
-                "Type = @Type, " +
-                "URL = @URL, " +
-                "URLName = @URLName, " +
-                "Latitude = @Latitude, " +
-                "Longitude = @Longitude, " +
-                "Altitude = @Altitude, " +
-                "LastChanged = @LastChanged " +
-                "WHERE GeocacheID = @GeocacheID";
+            Update(geocache, 0);
+        }
 
-            update.Parameters.AddRange(parameterList(geocache));
-            update.ExecuteNonQuery();
+        private void Update(Geocache geocache, int attempt = 0, SqlCommand update = null)
+        {
+            if (update == null)
+            {
+                update = CreateCommand();
+                update.CommandText = "UPDATE Geocaches SET " +
+                    "Name = @Name," +
+                    "CacheID = @CacheID, " +
+                    "Country = @Country," +
+                    "Description = @Description," +
+                    "Difficulty = @Difficulty," +
+                    "LongDescription = @LongDescription, " +
+                    "Owner = @Owner, " +
+                    "ShortDescription = @ShortDescription, " +
+                    "Size = @Size, " +
+                    "State = @State, " +
+                    "StatusArchived = @StatusArchived, " +
+                    "StatusAvailable = @StatusAvailable, " +
+                    "Symbol = @Symbol, " +
+                    "SymbolType = @SymbolType, " +
+                    "Terrain = @Terrain, " +
+                    "Time = @Time, " +
+                    "Type = @Type, " +
+                    "URL = @URL, " +
+                    "URLName = @URLName, " +
+                    "Latitude = @Latitude, " +
+                    "Longitude = @Longitude, " +
+                    "Altitude = @Altitude, " +
+                    "LastChanged = @LastChanged " +
+                    "WHERE GeocacheID = @GeocacheID";
+                update.Parameters.AddWithValue("@Name", geocache.Name);
+                update.Parameters.AddWithValue("@CacheID", geocache.CacheID);
+                update.Parameters.AddWithValue("@Country", geocache.Country);
+                update.Parameters.AddWithValue("@Description", geocache.Description);
+                update.Parameters.AddWithValue("@Difficulty", geocache.Difficulty);
+                update.Parameters.AddWithValue("@LongDescription", geocache.LongDescription);
+                update.Parameters.AddWithValue("@Owner", geocache.Owner);
+                update.Parameters.AddWithValue("@ShortDescription", geocache.ShortDescription);
+                update.Parameters.AddWithValue("@Size", geocache.Size);
+                update.Parameters.AddWithValue("@State", geocache.State);
+                update.Parameters.AddWithValue("@StatusArchived", geocache.StatusArchived);
+                update.Parameters.AddWithValue("@StatusAvailable", geocache.StatusAvailable);
+                update.Parameters.AddWithValue("@Symbol", geocache.Symbol);
+                update.Parameters.AddWithValue("@SymbolType", geocache.SymbolType);
+                update.Parameters.AddWithValue("@Terrain", geocache.Terrain);
+                update.Parameters.AddWithValue("@Time", geocache.Time);
+                update.Parameters.AddWithValue("@Type", geocache.Type);
+                update.Parameters.AddWithValue("@URL", geocache.URL);
+                update.Parameters.AddWithValue("@URLName", geocache.URLName);
+                update.Parameters.AddWithValue("@Latitude", geocache.Latitude);
+                update.Parameters.AddWithValue("@Longitude", geocache.Longitude);
+                update.Parameters.AddWithValue("@Altitude", geocache.Altitude);
+                update.Parameters.AddWithValue("@LastChanged", geocache.LastChanged);
+                update.Parameters.AddWithValue("@GeocacheID", geocache.GeocacheID);
+            }
+
+            bool ok = false;
+            while (!ok)
+            {
+                try
+                {
+                    update.ExecuteNonQuery();
+                    ok = true;
+                }
+                catch (SqlException e)
+                {
+                    if (e.Number == 1205) //Deadlock
+                    {
+                        Console.WriteLine($"Attempting to Update {geocache.CacheID}, attempt {attempt++}");
+                        //System.Threading.Thread.Sleep(new Random().Next(5000));
+                        Update(geocache, attempt, update);
+                    }
+                    else
+                        throw;
+                }
+            }
         }
 
         public void Commit()

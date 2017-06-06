@@ -2,34 +2,39 @@
 using System;
 using System.Collections.Generic;
 using System.Data.SqlClient;
-using System.Diagnostics;
 using System.Linq;
+using System.Threading.Tasks;
 
 namespace Geocaching
 {
     class Program
     {
+        private static Object websiteLock = new Object();
         static void Main(string[] args)
         {
-            WebExtractor.WebExtractor extractor = new WebExtractor.WebExtractor();
-
-
-            //See if we can interact with the Add To Queue button
-            bool test = new WebExtractorPocketQuery().QueueMyFinds(extractor);
-
-
-            //Check PocketQueries, save any new data.
-            List<PocketQuery> queries = new WebExtractorPocketQuery().ExtractPocketQueries(extractor).ToList();
-
-            foreach (PocketQuery pocketQuery in queries)
+        
+            Task queriesParent = Task.Factory.StartNew(() =>
             {
-                using (SqlConnection conn = new SqlConnection())
-                {
-                    conn.ConnectionString = System.Configuration.ConfigurationManager.AppSettings["DBConnectionString"];
-                    conn.Open();
+                //Check PocketQueries, save any new data.
+                List<PocketQuery> queries = new WebExtractorPocketQuery().ExtractPocketQueries(websiteLock).ToList();
 
-                    pocketQuery.Save(conn);
-                }
+                Parallel.ForEach<PocketQuery>(queries, new ParallelOptions() { MaxDegreeOfParallelism = 3 }, pocketQuery =>
+                {
+                    using (SqlConnection conn = new SqlConnection())
+                    {
+                        conn.ConnectionString = System.Configuration.ConfigurationManager.AppSettings["DBConnectionString"];
+                        conn.Open();
+                        pocketQuery.Save(conn);
+                    }
+                });
+            });
+
+            queriesParent.Wait();
+
+            if (System.Diagnostics.Debugger.IsAttached)
+            {
+                Console.WriteLine("Finished, press any key (debug)");
+                Console.ReadKey();
             }
 
 

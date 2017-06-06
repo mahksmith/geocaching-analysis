@@ -8,7 +8,7 @@ namespace Geocaching.WebExtractor
 {
     public class WebExtractorPocketQuery
     {
-        public IEnumerable<PocketQuery> ExtractPocketQueries(WebExtractor webExtractor)
+        public IEnumerable<PocketQuery> ExtractPocketQueries(Object websiteLock, HttpClient client = null)
         {
             HtmlAgilityPack.HtmlDocument result = webExtractor.GetPage("/pocket/");
 
@@ -32,6 +32,7 @@ namespace Geocaching.WebExtractor
                 {
                     HttpClient = webExtractor.Client
                 };
+                pocketQuery.WebsiteLock = websiteLock;
                 var columns = row.ChildNodes.Where(c => c.Name.Equals("td"));
 
                 if (columns.Count() < 6)

@@ -21,7 +21,8 @@ namespace Geocaching.Tests
         {
             WebExtractorPocketQuery test = new WebExtractorPocketQuery();
 
-            List<PocketQuery> queries = test.ExtractPocketQueries(webExtractor).ToList();
+            System.Object websiteLock = new System.Object();
+            List<PocketQuery> queries = test.ExtractPocketQueries(websiteLock).ToList();
             Assert.NotNull(queries);
             Assert.NotZero(queries.Count());
 

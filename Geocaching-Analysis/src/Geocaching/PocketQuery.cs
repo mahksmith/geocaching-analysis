@@ -48,6 +48,8 @@ namespace Geocaching
                 {
                     return _gpxGeocaches;
                 }
+
+                if (Zip == null) return null;
                 return _gpxGeocaches = ExtractGpx(Zip, FileType.Geocaches);
             }
         }
@@ -59,6 +61,7 @@ namespace Geocaching
                 {
                     return _gpxWaypoints;
                 }
+                if (Zip == null) return null;
                 return _gpxWaypoints = ExtractGpx(Zip, FileType.Waypoints);
             }
         }
@@ -66,6 +69,8 @@ namespace Geocaching
         public HttpClient HttpClient { get; internal set; }
         public string Name { get; internal set; }
         public string Url { get; internal set; }
+        public Object WebsiteLock { get; internal set; }
+        [NotMapped]
         public ZipArchive Zip
         {
             get
@@ -74,6 +79,7 @@ namespace Geocaching
                 {
                     return _zip;
                 }
+                if (Url == null) return null;
                 return _zip = DownloadZip(HttpClient, Url);
             }
 
@@ -81,14 +87,17 @@ namespace Geocaching
 
         public ZipArchive DownloadZip(HttpClient httpClient, string url)
         {
-            if (httpClient != null && url != null)
+            lock (WebsiteLock)
             {
-                Debug.WriteLine($"Downloading Pocket Query {Name}");
+                if (httpClient != null && url != null)
+                {
+                    Debug.WriteLine($"Downloading Pocket Query {Name}");
 
-                var result = httpClient.GetAsync(url);
-                result.Result.EnsureSuccessStatusCode();
+                    var result = httpClient.GetAsync(url);
+                    result.Result.EnsureSuccessStatusCode();
 
-                return new ZipArchive(result.Result.Content.ReadAsStreamAsync().Result);
+                    return new ZipArchive(result.Result.Content.ReadAsStreamAsync().Result);
+                }
             }
 
             return null;
@@ -193,9 +202,13 @@ namespace Geocaching
                 {
                     DataRow logRow = logDataTable.Select(String.Format("GeocacheID = '{0}' AND ID = '{1}'", log.GeocacheID, log.ID)).FirstOrDefault();
                     if (logRow != null)
-                        logRepo.Update(log);
+                    {
+                        if (DateTime.Parse(row["LastChanged"].ToString()) < log.LastChanged)
+                            logRepo.Update(log);
+                    }
                     else
                         logRepo.Add(log);
+                    
                 }
             }
 
@@ -210,17 +223,17 @@ namespace Geocaching
             }
             catch (Exception commit)
             {
-                //Commit failed, try rollback
+                Console.WriteLine("Commit Exception Type: {0}", commit.GetType());
+                Console.WriteLine("  Message: {0}", commit.Message);
                 try
                 {
                     transaction.Rollback();
                 }
                 catch (Exception rollback)
                 {
-                    //TODO
+                    Console.WriteLine("Rollback Exception Type: {0}", rollback.GetType());
+                    Console.WriteLine("  Message: {0}", rollback.Message);
                 }
-
-                throw;
             }
         }
     }
