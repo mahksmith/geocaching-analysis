@@ -12,7 +12,7 @@ namespace Geocaching
         private static Object websiteLock = new Object();
         static void Main(string[] args)
         {
-            
+        
             Task queriesParent = Task.Factory.StartNew(() =>
             {
                 //Check PocketQueries, save any new data.
@@ -35,6 +35,13 @@ namespace Geocaching
             {
                 Console.WriteLine("Finished, press any key (debug)");
                 Console.ReadKey();
+            }
+
+
+            if (Debugger.IsAttached)
+            {
+                Debug.WriteLine("Finished");
+                Console.ReadLine();
             }
         }
     }

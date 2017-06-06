@@ -8,6 +8,14 @@ namespace Geocaching.Tests
     [TestFixture]
     class PocketQueryDownloaderTest
     {
+        private WebExtractor.WebExtractor webExtractor;
+
+        [OneTimeSetUp]
+        public void Setup()
+        {
+            webExtractor = new WebExtractor.WebExtractor();
+        }
+
         [Test]
         public void DownloadPocketQueryIntegrationTest()
         {

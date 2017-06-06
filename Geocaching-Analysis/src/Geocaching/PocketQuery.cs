@@ -1,7 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations;
-using System.ComponentModel.DataAnnotations.Schema;
 using System.Data;
 using System.Data.SqlClient;
 using System.Diagnostics;
@@ -67,10 +65,8 @@ namespace Geocaching
                 return _gpxWaypoints = ExtractGpx(Zip, FileType.Waypoints);
             }
         }
-
-        [NotMapped]
+        
         public HttpClient HttpClient { get; internal set; }
-        [Key]
         public string Name { get; internal set; }
         public string Url { get; internal set; }
         public Object WebsiteLock { get; internal set; }

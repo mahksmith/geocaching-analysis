@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Data.SqlClient;
 using System.Linq;
 
@@ -21,11 +22,8 @@ namespace Geocaching
             SqlCommand command = CreateCommand();
             command.CommandText = "INSERT INTO PocketQueries(Name, DateGenerated, EntryCount, FileSize, Url)" +
                 "VALUES (@Name, @DateGenerated, @EntryCount, @FileSize, @Url);";
-            command.Parameters.AddWithValue("Name", pq.Name);
-            command.Parameters.AddWithValue("DateGenerated", pq.DateGenerated);
-            command.Parameters.AddWithValue("EntryCount", pq.EntryCount);
-            command.Parameters.AddWithValue("FileSize", pq.FileSize);
-            command.Parameters.AddWithValue("Url", pq.Url);
+
+            command.Parameters.AddRange(parameterList(pq));
             command.ExecuteNonQuery();
         }
 
@@ -44,6 +42,18 @@ namespace Geocaching
             throw new NotImplementedException();
         }
 
+        public SqlParameter[] parameterList(PocketQuery pq)
+        {
+            List<SqlParameter> parameters = new List<SqlParameter>(5);
+
+            parameters.Add(new SqlParameter("Name", pq.Name));
+            parameters.Add(new SqlParameter("DateGenerated", pq.DateGenerated));
+            parameters.Add(new SqlParameter("EntryCount", pq.EntryCount));
+            parameters.Add(new SqlParameter("FileSize", pq.FileSize));
+            parameters.Add(new SqlParameter("Url", pq.Url));
+            return parameters.ToArray();
+        }
+
         public void Update(PocketQuery pq)
         {
             SqlCommand update = CreateCommand();
@@ -54,11 +64,7 @@ namespace Geocaching
                 "Url = @Url " +
                 "WHERE Name = @Name";
 
-            update.Parameters.AddWithValue("DateGenerated", pq.DateGenerated);
-            update.Parameters.AddWithValue("EntryCount", pq.EntryCount);
-            update.Parameters.AddWithValue("FileSize", pq.FileSize);
-            update.Parameters.AddWithValue("Url", pq.Url);
-            update.Parameters.AddWithValue("Name", pq.Name);
+            update.Parameters.AddRange(parameterList(pq));
             update.ExecuteNonQuery();
         }
 

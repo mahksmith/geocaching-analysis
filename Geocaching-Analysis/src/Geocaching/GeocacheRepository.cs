@@ -10,6 +10,7 @@ namespace Geocaching
         private SqlConnection _connection;
         private SqlTransaction _transaction;
 
+
         public GeocacheRepository(SqlConnection connection, SqlTransaction transaction)
         {
             this._connection = connection;
@@ -54,7 +55,7 @@ namespace Geocaching
                 add.Parameters.AddWithValue("@LastChanged", geocache.LastChanged);
                 add.Parameters.AddWithValue("@GeocacheID", geocache.GeocacheID);
             }
-
+            
             bool ok = false;
             while (!ok)
             {
@@ -188,6 +189,63 @@ namespace Geocaching
             SqlCommand command = _connection.CreateCommand();
             command.Transaction = _transaction;
             return command;
+        }
+
+        void IUoWRepository<Geocache>.Commit()
+        {
+            throw new NotImplementedException();
+        }
+
+        IQueryable<Geocache> IRepository<Geocache>.All()
+        {
+            throw new NotImplementedException();
+        }
+
+        void IRepository<Geocache>.Add(Geocache entity)
+        {
+            throw new NotImplementedException();
+        }
+
+        void IRepository<Geocache>.Update(Geocache entity)
+        {
+            throw new NotImplementedException();
+        }
+
+        void IRepository<Geocache>.Delete(Geocache entity)
+        {
+            throw new NotImplementedException();
+        }
+
+        public SqlParameter[] parameterList(Geocache geocache)
+        {
+            List<SqlParameter> parameters = new List<SqlParameter>(24)
+            {
+                new SqlParameter("Name", geocache.Name),
+                new SqlParameter("CacheID", geocache.CacheID),
+                new SqlParameter("Country", geocache.Country),
+                new SqlParameter("Description", geocache.Description),
+                new SqlParameter("Difficulty", geocache.Difficulty),
+                new SqlParameter("LongDescription", geocache.LongDescription),
+                new SqlParameter("Owner", geocache.Owner),
+                new SqlParameter("ShortDescription", geocache.ShortDescription),
+                new SqlParameter("Size", geocache.Size),
+                new SqlParameter("State", geocache.State),
+                new SqlParameter("StatusArchived", geocache.StatusArchived),
+                new SqlParameter("StatusAvailable", geocache.StatusAvailable),
+                new SqlParameter("Symbol", geocache.Symbol),
+                new SqlParameter("SymbolType", geocache.SymbolType),
+                new SqlParameter("Terrain", geocache.Terrain),
+                new SqlParameter("Time", geocache.Time),
+                new SqlParameter("Type", geocache.Type),
+                new SqlParameter("URL", geocache.URL),
+                new SqlParameter("URLName", geocache.URLName),
+                new SqlParameter("Latitude", geocache.Latitude),
+                new SqlParameter("Longitude", geocache.Longitude),
+                new SqlParameter("Altitude", geocache.Altitude),
+                new SqlParameter("LastChanged", geocache.LastChanged),
+                new SqlParameter("GeocacheID", geocache.GeocacheID)
+            };
+            return parameters.ToArray();
         }
     }
 }

@@ -83,6 +83,21 @@ namespace Geocaching
             throw new NotImplementedException();
         }
 
+        public SqlParameter[] parameterList(Log log)
+        {
+            List<SqlParameter> parameters = new List<SqlParameter>(7)
+            {
+                new SqlParameter("GeocacheID", log.GeocacheID),
+                new SqlParameter("Date", log.Date),
+                new SqlParameter("Type", log.Type),
+                new SqlParameter("Author", log.Author),
+                new SqlParameter("Text", log.Text),
+                new SqlParameter("TextEncoded", log.TextEncoded),
+                new SqlParameter("ID", log.ID)
+            };
+            return parameters.ToArray();
+        }
+
         public void Update(Log log)
         {
             Update(log, 0);
