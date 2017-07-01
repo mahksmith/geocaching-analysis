@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Data.SqlClient;
+using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -18,7 +19,7 @@ namespace Geocaching
                 //Check PocketQueries, save any new data.
                 List<PocketQuery> queries = new WebExtractorPocketQuery().ExtractPocketQueries(websiteLock).ToList();
 
-                Parallel.ForEach<PocketQuery>(queries, new ParallelOptions() { MaxDegreeOfParallelism = 3 }, pocketQuery =>
+                Parallel.ForEach<PocketQuery>(queries, pocketQuery =>
                 {
                     using (SqlConnection conn = new SqlConnection())
                     {
@@ -31,17 +32,10 @@ namespace Geocaching
 
             queriesParent.Wait();
 
-            if (System.Diagnostics.Debugger.IsAttached)
+            if (Debugger.IsAttached)
             {
                 Console.WriteLine("Finished, press any key (debug)");
                 Console.ReadKey();
-            }
-
-
-            if (Debugger.IsAttached)
-            {
-                Debug.WriteLine("Finished");
-                Console.ReadLine();
             }
         }
     }

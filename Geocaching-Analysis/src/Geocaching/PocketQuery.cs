@@ -70,7 +70,6 @@ namespace Geocaching
         public string Name { get; internal set; }
         public string Url { get; internal set; }
         public Object WebsiteLock { get; internal set; }
-        [NotMapped]
         public ZipArchive Zip
         {
             get

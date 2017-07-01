@@ -8,9 +8,23 @@ namespace Geocaching.WebExtractor
 {
     public class WebExtractorPocketQuery
     {
-        public IEnumerable<PocketQuery> ExtractPocketQueries(Object websiteLock, HttpClient client = null)
+        public IEnumerable<PocketQuery> ExtractPocketQueries(Object websiteLock)
         {
-            HtmlAgilityPack.HtmlDocument result = webExtractor.GetPage("/pocket/");
+            WebExtractor webExtractor = new WebExtractor();
+            HtmlDocument result = webExtractor.GetPage("/pocket/");
+
+            //Determine if log in was successful
+            //<div class="validation-summary-errors">
+
+            //TODO When GUI is implemented, need to write this error to GUI message, or debug.
+            var loginResult = result.DocumentNode.Descendants("div").Where(d => d.Attributes.Contains("class") &&
+                d.Attributes["class"].Value.Equals("validation-summary-errors"));
+
+            if (loginResult != null)
+            {
+                Debug.WriteLine("Password or Email incorrect!");
+                return new List<PocketQuery>();
+            }
 
             //Iterate over each Pocket Query to get the download strings. The fourth one should have the "<a href"
             Debug.WriteLine("Extracting PocketQueries");
