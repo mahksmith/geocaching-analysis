@@ -14,9 +14,6 @@ namespace Geocaching
         static void Main(string[] args)
         {
 
-            //Task queriesParent = Task.Factory.StartNew(() =>
-            //{
-            //Check PocketQueries, save any new data.
             List<PocketQuery> queries = new WebExtractorPocketQuery().ExtractPocketQueries(websiteLock).ToList();
 
             Task[] pocketQueryTasks = new Task[queries.Count];
