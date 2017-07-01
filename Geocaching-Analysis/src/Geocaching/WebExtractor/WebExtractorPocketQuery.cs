@@ -16,12 +16,12 @@ namespace Geocaching.WebExtractor
             //Determine if log in was successful
             //<div class="validation-summary-errors">
 
-            //TODO When GUI is implemented, need to write this error to GUI message, or debug.
-            var loginResult = result.DocumentNode.Descendants("div").Where(d => d.Attributes.Contains("class") &&
+            var loginResult = result.DocumentNode.Descendants("div").FirstOrDefault(d => d.Attributes.Contains("class") &&
                 d.Attributes["class"].Value.Equals("validation-summary-errors"));
 
             if (loginResult != null)
             {
+                //TODO When GUI is implemented, need to write this error to GUI message, or debug.
                 Debug.WriteLine("Password or Email incorrect!");
                 return new List<PocketQuery>();
             }

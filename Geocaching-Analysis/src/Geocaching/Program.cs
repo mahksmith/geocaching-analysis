@@ -13,24 +13,29 @@ namespace Geocaching
         private static Object websiteLock = new Object();
         static void Main(string[] args)
         {
-        
-            Task queriesParent = Task.Factory.StartNew(() =>
-            {
-                //Check PocketQueries, save any new data.
-                List<PocketQuery> queries = new WebExtractorPocketQuery().ExtractPocketQueries(websiteLock).ToList();
 
-                Parallel.ForEach<PocketQuery>(queries, pocketQuery =>
+            //Task queriesParent = Task.Factory.StartNew(() =>
+            //{
+            //Check PocketQueries, save any new data.
+            List<PocketQuery> queries = new WebExtractorPocketQuery().ExtractPocketQueries(websiteLock).ToList();
+
+            Task[] pocketQueryTasks = new Task[queries.Count];
+
+            for (int i = 0; i < pocketQueryTasks.Length; i++)
+            {
+                int j = i;
+                pocketQueryTasks[j] = Task.Factory.StartNew(() =>
                 {
                     using (SqlConnection conn = new SqlConnection())
                     {
                         conn.ConnectionString = System.Configuration.ConfigurationManager.AppSettings["DBConnectionString"];
                         conn.Open();
-                        pocketQuery.Save(conn);
+                        queries[j].Save(conn);
                     }
                 });
-            });
+            }
 
-            queriesParent.Wait();
+            Task.WaitAll(pocketQueryTasks);
 
             if (Debugger.IsAttached)
             {
