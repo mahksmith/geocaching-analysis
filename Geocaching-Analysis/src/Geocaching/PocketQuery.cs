@@ -93,7 +93,8 @@ namespace Geocaching
                     Debug.WriteLine($"Downloading Pocket Query {Name}");
 
                     var result = httpClient.GetAsync(url);
-                    result.Result.EnsureSuccessStatusCode();
+                    if (result.Result != null)
+                        result.Result.EnsureSuccessStatusCode();
 
                     return new ZipArchive(result.Result.Content.ReadAsStreamAsync().Result);
                 }
@@ -200,7 +201,7 @@ namespace Geocaching
                 foreach (Log log in cache.Logs)
                 {
                     DataRow logRow = logDataTable.Select(String.Format("GeocacheID = '{0}' AND ID = '{1}'", log.GeocacheID, log.ID)).FirstOrDefault();
-                    if (logRow != null)
+                    if (logRow != null && row != null )
                     {
                         if (DateTime.Parse(row["LastChanged"].ToString()) < log.LastChanged)
                             logRepo.Update(log);
