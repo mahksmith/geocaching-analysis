@@ -1,10 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Net;
 using System.Net.Http;
 using System.Diagnostics;
 using System.Threading.Tasks;
+using HtmlAgilityPack;
 
 namespace Geocaching.WebExtractor
 {
@@ -46,7 +46,7 @@ namespace Geocaching.WebExtractor
             {
                 PocketQuery pocketQuery = new PocketQuery()
                 {
-                    HttpClient = client
+                    HttpClient = webExtractor.Client
                 };
                 pocketQuery.WebsiteLock = websiteLock;
                 var columns = row.ChildNodes.Where(c => c.Name.Equals("td"));
