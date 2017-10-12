@@ -81,7 +81,7 @@ namespace Geocaching
                 }
                 if (Url == null) return null;
                 lock (WebsiteLock)
-                    return _zip = DownloadZip(HttpClient, Url);
+                    return _zip = DownloadZipAsync(HttpClient, Url).Result;
             }
 
         }
@@ -114,6 +114,7 @@ namespace Geocaching
                 var response = await httpClient.GetAsync(url);
                 if (response.IsSuccessStatusCode)
                     return new ZipArchive(response.Content.ReadAsStreamAsync().Result);
+                return null;
             }
 
             return null;
