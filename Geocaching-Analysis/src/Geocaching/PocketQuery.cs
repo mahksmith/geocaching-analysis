@@ -111,10 +111,17 @@ namespace Geocaching
             {
                 Debug.WriteLine($"Downloading Pocket Query {Name}");
 
-                var response = await httpClient.GetAsync(url);
-                if (response.IsSuccessStatusCode)
-                    return new ZipArchive(response.Content.ReadAsStreamAsync().Result);
-                return null;
+                try
+                {
+                    var response = await httpClient.GetAsync(url);
+                    if (response.IsSuccessStatusCode)
+                        return new ZipArchive(response.Content.ReadAsStreamAsync().Result);
+                    return null;
+                } catch (Exception e)
+                {
+                    Console.WriteLine($"DownloadZipAsync Caught Exception {e}");
+                    return null;
+                }
             }
 
             return null;
