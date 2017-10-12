@@ -1,12 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Data.SqlClient;
-using System.Diagnostics;
 using System.Linq;
 
 namespace Geocaching
 {
-    class GeocacheRepository : IUoWRepository<Geocache>
+    class GeocacheRepository : GenericRepository<Geocache>, IUoWRepository<Geocache>
     {
         private SqlConnection _connection;
         private SqlTransaction _transaction;
@@ -18,12 +17,12 @@ namespace Geocaching
             this._transaction = transaction;
         }
 
-        public void Add(Geocache geocache)
+        public override Geocache Add(Geocache geocache)
         {
-            Add(geocache, 0);
+            return Add(geocache, 0);
         }
 
-        private void Add(Geocache geocache, int attempt = 0, SqlCommand add = null)
+        private Geocache Add(Geocache geocache, int attempt = 0, SqlCommand add = null)
         {
             if (add == null) {
                 add = CreateCommand();
@@ -56,53 +55,55 @@ namespace Geocaching
                 add.Parameters.AddWithValue("@LastChanged", geocache.LastChanged);
                 add.Parameters.AddWithValue("@GeocacheID", geocache.GeocacheID);
             }
-            
-            bool ok = false;
-            while (!ok)
-            {
-                try
-                {
-                    add.ExecuteNonQuery();
-                    ok = true;
-                }
-                catch (SqlException e)
-                {
-                    if (e.Number == 1205) //Deadlock
-                    {
-                        Console.WriteLine($"Attempting to Add {geocache.CacheID}, attempt {attempt++}");
-                        //System.Threading.Thread.Sleep(new Random().Next(5000));
-                        Add(geocache, attempt, add);
-                    }
 
-                    //TODO document what these numbers refer to...
-                    else if (e.Number == 2627 || e.Number == 2601)
-                    {
-                        Console.WriteLine($"Geocache: Duplicate Key {geocache.CacheID}");
-                        Update(geocache);
-                        ok = true;          // Required, will loop infinitely..
-                    }
-                    else
-                        throw;
-                }
-            }
+            base.Retry(() => Add(geocache, ++attempt, add), () => Update(geocache), ++attempt, 3, add);
+            //bool ok = false;
+            //while (!ok)
+            //{
+            //    try
+            //    {
+            //        add.ExecuteNonQuery();
+            //        ok = true;
+            //    }
+            //    catch (SqlException e)
+            //    {
+            //        if (e.Number == 1205) //Deadlock
+            //        {
+            //            Console.WriteLine($"Attempting to Add {geocache.CacheID}, attempt {attempt++}");
+            //            //System.Threading.Thread.Sleep(new Random().Next(5000));
+            //            Add(geocache, attempt, add);
+            //        }
+
+            //        //TODO document what these numbers refer to...
+            //        else if (e.Number == 2627 || e.Number == 2601)
+            //        {
+            //            Console.WriteLine($"Geocache: Duplicate Key {geocache.CacheID}");
+            //            Update(geocache);
+            //            ok = true;          // Required, will loop infinitely..
+            //        }
+            //        else
+            //            throw;
+            //    }
+            //}
+            return geocache;
         }
 
-        public IQueryable<Geocache> All()
+        public override IQueryable<Geocache> All()
         {
             throw new NotImplementedException();
         }
 
-        public void Delete(Geocache geocache)
+        public override void Delete(Geocache geocache)
         {
             throw new NotImplementedException();
         }
 
-        public void Update(Geocache geocache)
+        public override void Update(Geocache geocache)
         {
             Update(geocache, 0);
         }
 
-        private void Update(Geocache geocache, int attempt = 0, SqlCommand update = null)
+        private Geocache Update(Geocache geocache, int attempt = 0, SqlCommand update = null)
         {
             if (update == null)
             {
@@ -157,27 +158,29 @@ namespace Geocaching
                 update.Parameters.AddWithValue("@LastChanged", geocache.LastChanged);
                 update.Parameters.AddWithValue("@GeocacheID", geocache.GeocacheID);
             }
-
-            bool ok = false;
-            while (!ok)
-            {
-                try
-                {
-                    update.ExecuteNonQuery();
-                    ok = true;
-                }
-                catch (SqlException e)
-                {
-                    if (e.Number == 1205) //Deadlock
-                    {
-                        Console.WriteLine($"Attempting to Update {geocache.CacheID}, attempt {attempt++}");
-                        //System.Threading.Thread.Sleep(new Random().Next(5000));
-                        Update(geocache, attempt, update);
-                    }
-                    else
-                        throw;
-                }
-            }
+            
+            base.Retry(() => Update(geocache, ++attempt, update), () => Update(geocache), ++attempt, 3, update);
+            //bool ok = false;
+            //while (!ok)
+            //{
+            //    try
+            //    {
+            //        update.ExecuteNonQuery();
+            //        ok = true;
+            //    }
+            //    catch (SqlException e)
+            //    {
+            //        if (e.Number == 1205) //Deadlock
+            //        {
+            //            Console.WriteLine($"Attempting to Update {geocache.CacheID}, attempt {attempt++}");
+            //            //System.Threading.Thread.Sleep(new Random().Next(5000));
+            //            Update(geocache, attempt, update);
+            //        }
+            //        else
+            //            throw;
+            //    }
+            //}
+            return geocache;
         }
 
         public void Commit()
@@ -198,11 +201,6 @@ namespace Geocaching
         }
 
         IQueryable<Geocache> IRepository<Geocache>.All()
-        {
-            throw new NotImplementedException();
-        }
-
-        void IRepository<Geocache>.Add(Geocache entity)
         {
             throw new NotImplementedException();
         }

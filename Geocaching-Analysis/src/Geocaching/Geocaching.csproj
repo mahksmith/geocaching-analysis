@@ -84,6 +84,7 @@
     <Compile Include="LogRepository.cs" />
     <Compile Include="PocketQuery.cs" />
     <Compile Include="PocketQueryRepository.cs" />
+    <Compile Include="GenericRepository.cs" />
     <Compile Include="WebExtractor\WebExtractor.cs" />
     <Compile Include="WebExtractor\WebExtractorPocketQuery.cs" />
     <Compile Include="Program.cs" />

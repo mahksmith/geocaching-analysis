@@ -5,7 +5,7 @@ using System.Linq;
 
 namespace Geocaching
 {
-    internal class PocketQueryRepository : IUoWRepository<PocketQuery>
+    internal class PocketQueryRepository : GenericRepository<PocketQuery>, IUoWRepository<PocketQuery>
     {
         private SqlConnection _connection;
         private SqlTransaction _transaction;   
@@ -17,7 +17,7 @@ namespace Geocaching
         }
         
 
-        public void Add(PocketQuery pq)
+        public override PocketQuery Add(PocketQuery pq)
         {
             SqlCommand command = CreateCommand();
             command.CommandText = "INSERT INTO PocketQueries(Name, DateGenerated, EntryCount, FileSize, Url)" +
@@ -25,9 +25,11 @@ namespace Geocaching
 
             command.Parameters.AddRange(parameterList(pq));
             command.ExecuteNonQuery();
+
+            return pq;
         }
 
-        public IQueryable<PocketQuery> All()
+        public override IQueryable<PocketQuery> All()
         {
             throw new NotImplementedException();
         }
@@ -37,24 +39,25 @@ namespace Geocaching
             throw new NotImplementedException();
         }
 
-        public void Delete(PocketQuery pq)
+        public override void Delete(PocketQuery pq)
         {
             throw new NotImplementedException();
         }
 
         public SqlParameter[] parameterList(PocketQuery pq)
         {
-            List<SqlParameter> parameters = new List<SqlParameter>(5);
-
-            parameters.Add(new SqlParameter("Name", pq.Name));
-            parameters.Add(new SqlParameter("DateGenerated", pq.DateGenerated));
-            parameters.Add(new SqlParameter("EntryCount", pq.EntryCount));
-            parameters.Add(new SqlParameter("FileSize", pq.FileSize));
-            parameters.Add(new SqlParameter("Url", pq.Url));
+            List<SqlParameter> parameters = new List<SqlParameter>(5)
+            {
+                new SqlParameter("Name", pq.Name),
+                new SqlParameter("DateGenerated", pq.DateGenerated),
+                new SqlParameter("EntryCount", pq.EntryCount),
+                new SqlParameter("FileSize", pq.FileSize),
+                new SqlParameter("Url", pq.Url)
+            };
             return parameters.ToArray();
         }
 
-        public void Update(PocketQuery pq)
+        public override void Update(PocketQuery pq)
         {
             SqlCommand update = CreateCommand();
             update.CommandText = "UPDATE PocketQueries SET " +

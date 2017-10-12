@@ -1,4 +1,5 @@
-﻿using System.Linq;
+﻿using System;
+using System.Linq;
 
 namespace Geocaching
 {
@@ -8,12 +9,10 @@ namespace Geocaching
 
         //T Find(object id);
 
-        void Add(T entity);
+        T Add(T entity);
 
         void Update(T entity);
 
         void Delete(T entity);
-
-        //T Delete(object id);
     }
 }

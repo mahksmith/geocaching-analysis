@@ -6,7 +6,7 @@ using System.Linq;
 
 namespace Geocaching
 {
-    class LogRepository : IUoWRepository<Log>
+    class LogRepository : GenericRepository<Log>, IUoWRepository<Log>
     {
         private SqlConnection _connection;
         private SqlTransaction _transaction;
@@ -17,12 +17,12 @@ namespace Geocaching
             _transaction = transaction;
         }
 
-        public void Add(Log log)
+        public override Log Add(Log log)
         {
-            Add(log, 0);
+            return Add(log, 0);
         }
 
-        public void Add(Log log, int attempt = 0, SqlCommand add = null)
+        public Log Add(Log log, int attempt = 0, SqlCommand add = null)
         {
             if (add == null)
             {
@@ -39,37 +39,42 @@ namespace Geocaching
             }
 
             //TODO: we should have already checked for existance in database previously, however, we still might need to run update if a deadlock occurs on Add.
-            bool ok = false;
-            while (!ok)
-            {
-                try
-                {
-                    add.ExecuteNonQuery();
-                    ok = true;
-                }
-                catch (SqlException e)
-                {
-                    if (e.Number == 1205) //Deadlock
-                    {
-                        Console.WriteLine($"Attempting to Add {log.GeocacheID}, attempt {attempt++}");
-                        //System.Threading.Thread.Sleep(new Random().Next(5000));
-                        Add(log, attempt, add);
-                    }
+            base.Retry(() => Add(log, ++attempt, add), () => Update(log), ++attempt, 3, add);
 
-                    //TODO document what these numbers mean..
-                    else if (e.Number == 2627 || e.Number == 2601)
-                    {
-                        Console.WriteLine($"Log: Duplicate Key: {log.ID}");
-                        Update(log);
-                        ok = true;          // Required, will loop infinitely..
-                    }
-                    else
-                        throw;
-                }
-            }
+
+            //bool ok = false;
+            //while (!ok)
+            //{
+            //    try
+            //    {
+            //        add.ExecuteNonQuery();
+            //        ok = true;
+            //    }
+            //    catch (SqlException e)
+            //    {
+            //        if (e.Number == 1205) //Deadlock
+            //        {
+            //            Console.WriteLine($"Attempting to Add {log.GeocacheID}, attempt {attempt++}");
+            //            //System.Threading.Thread.Sleep(new Random().Next(5000));
+            //            Add(log, attempt, add);
+            //        }
+
+            //        //TODO document what these numbers mean..
+            //        else if (e.Number == 2627 || e.Number == 2601)
+            //        {
+            //            Console.WriteLine($"Log: Duplicate Key: {log.ID}");
+            //            Update(log);
+            //            ok = true;          // Required, will loop infinitely..
+            //        }
+            //        else
+            //            throw;
+            //    }
+            //}
+
+            return log;
         }
 
-        public IQueryable<Log> All()
+        public override IQueryable<Log> All()
         {
             throw new NotImplementedException();
         }
@@ -79,7 +84,7 @@ namespace Geocaching
             throw new NotImplementedException();
         }
 
-        public void Delete(Log entity)
+        public override void Delete(Log entity)
         {
             throw new NotImplementedException();
         }
@@ -99,12 +104,12 @@ namespace Geocaching
             return parameters.ToArray();
         }
 
-        public void Update(Log log)
+        public override void Update(Log log)
         {
             Update(log, 0);
         }
 
-        public void Update(Log log, int attempt = 0, SqlCommand update = null)
+        public Log Update(Log log, int attempt = 0, SqlCommand update = null)
         {
             if (update == null)
             {
@@ -128,27 +133,28 @@ namespace Geocaching
                 update.Parameters.AddWithValue("@ID", log.ID);
                 update.CommandTimeout = 0;
             }
-
-            bool ok = false;
-            while (!ok)
-            {
-                try
-                {
-                    update.ExecuteNonQuery();
-                    ok = true;
-                }
-                catch (SqlException e)
-                {
-                    if (e.Number == 1205) //Deadlock
-                    {
-                        Console.WriteLine($"Attempting to Update {log.GeocacheID}, attempt {attempt++}");
-                        //System.Threading.Thread.Sleep(new Random().Next(5000));
-                        Update(log, attempt, update);
-                    }
-                    else
-                        throw;
-                }
-            }
+            base.Retry(() => Update(log, ++attempt, update), () => Update(log), ++attempt, 3, update);
+            //bool ok = false;
+            //while (!ok)
+            //{
+            //    try
+            //    {
+            //        update.ExecuteNonQuery();
+            //        ok = true;
+            //    }
+            //    catch (SqlException e)
+            //    {
+            //        if (e.Number == 1205) //Deadlock
+            //        {
+            //            Console.WriteLine($"Attempting to Update {log.GeocacheID}, attempt {attempt++}");
+            //            //System.Threading.Thread.Sleep(new Random().Next(5000));
+            //            Update(log, attempt, update);
+            //        }
+            //        else
+            //            throw;
+            //    }
+            //}
+            return log;
         }
 
         private SqlCommand CreateCommand()
@@ -156,11 +162,6 @@ namespace Geocaching
             SqlCommand command = _connection.CreateCommand();
             command.Transaction = _transaction;
             return command;
-        }
-
-        private void handleDeadLockException()
-        {
-
         }
     }
 }

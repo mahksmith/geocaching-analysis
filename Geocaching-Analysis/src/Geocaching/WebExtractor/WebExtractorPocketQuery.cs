@@ -83,7 +83,7 @@ namespace Geocaching.WebExtractor
             return pocketQueries;
         }
 
-        private HtmlAgilityPack.HtmlDocument LogIn(string logInPage, HttpClient client)
+        private HtmlDocument LogIn(string logInPage, HttpClient client)
         {
             Debug.WriteLine("Accessing Geocaching Login..");
             var pageResult = client.GetAsync(logInPage);

@@ -8,6 +8,7 @@ using System.IO.Compression;
 using System.Linq;
 using System.Net.Http;
 using System.Text;
+using System.Threading.Tasks;
 
 namespace Geocaching
 {
@@ -65,7 +66,7 @@ namespace Geocaching
                 return _gpxWaypoints = ExtractGpx(Zip, FileType.Waypoints);
             }
         }
-        
+
         public HttpClient HttpClient { get; internal set; }
         public string Name { get; internal set; }
         public string Url { get; internal set; }
@@ -79,7 +80,8 @@ namespace Geocaching
                     return _zip;
                 }
                 if (Url == null) return null;
-                return _zip = DownloadZip(HttpClient, Url);
+                lock (WebsiteLock)
+                    return _zip = DownloadZip(HttpClient, Url);
             }
 
         }
@@ -93,11 +95,25 @@ namespace Geocaching
                     Debug.WriteLine($"Downloading Pocket Query {Name}");
 
                     var result = httpClient.GetAsync(url);
-                    if (result.Result != null)
+                    if (!result.IsCanceled && result.Result != null)
                         result.Result.EnsureSuccessStatusCode();
 
                     return new ZipArchive(result.Result.Content.ReadAsStreamAsync().Result);
                 }
+            }
+
+            return null;
+        }
+
+        public async Task<ZipArchive> DownloadZipAsync(HttpClient httpClient, string url)
+        {
+            if (httpClient != null && url != null)
+            {
+                Debug.WriteLine($"Downloading Pocket Query {Name}");
+
+                var response = await httpClient.GetAsync(url);
+                if (response.IsSuccessStatusCode)
+                    return new ZipArchive(response.Content.ReadAsStreamAsync().Result);
             }
 
             return null;
@@ -170,7 +186,26 @@ namespace Geocaching
 
             var dataReader = command.ExecuteReader();
             var geocacheDataTable = new DataTable();
-            geocacheDataTable.Load(dataReader);
+
+            //TODO handle 1205 -- deadlock
+            Boolean loadOkay = false;
+            while (loadOkay != true)
+            {
+                try
+                {
+                    geocacheDataTable.Load(dataReader);
+                }
+                catch (SqlException e)
+                {
+                    if (e.Number == 1205) //deadlock
+                    {
+                        Console.WriteLine("sleeping geocacheDataTable"); //todo temp
+                        System.Threading.Thread.Sleep(new Random().Next(1000));
+                    }
+                    else throw e;
+                }
+                loadOkay = true;
+            }
 
             command = new SqlCommand(String.Format("SELECT GeocacheID, ID FROM Logs WHERE GeocacheID IN ({0});", sb.ToString()))
             {
@@ -179,6 +214,26 @@ namespace Geocaching
 
             dataReader = command.ExecuteReader();
             var logDataTable = new DataTable();
+
+            //TODO handle 1205 -- deadlock
+            loadOkay = false;
+            while (loadOkay != true)
+            {
+                try
+                {
+                    logDataTable.Load(dataReader);
+                }
+                catch (SqlException e)
+                {
+                    if (e.Number == 1205) //deadlock
+                    {
+                        Console.WriteLine("sleeping logDataTable"); //todo temp
+                        System.Threading.Thread.Sleep(new Random().Next(1000));
+                    }
+                    else throw e;
+                }
+                loadOkay = true;
+            }
             logDataTable.Load(dataReader);
 
             SqlTransaction transaction = connection.BeginTransaction();
@@ -201,14 +256,14 @@ namespace Geocaching
                 foreach (Log log in cache.Logs)
                 {
                     DataRow logRow = logDataTable.Select(String.Format("GeocacheID = '{0}' AND ID = '{1}'", log.GeocacheID, log.ID)).FirstOrDefault();
-                    if (logRow != null && row != null )
+                    if (logRow != null && row != null)
                     {
                         if (DateTime.Parse(row["LastChanged"].ToString()) < log.LastChanged)
                             logRepo.Update(log);
                     }
                     else
                         logRepo.Add(log);
-                    
+
                 }
             }
 
