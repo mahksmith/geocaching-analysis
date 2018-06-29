@@ -11,6 +11,8 @@ namespace Geocaching
     class Program
     {
         private static Object websiteLock = new Object();
+
+        // Objects for processing and events.
         static void Main(string[] args)
         {
 
@@ -28,11 +30,21 @@ namespace Geocaching
                         conn.ConnectionString = System.Configuration.ConfigurationManager.AppSettings["DBConnectionString"];
                         conn.Open();
                         queries[j].Save(conn);
+
                     }
                 });
             }
 
-            Task.WaitAll(pocketQueryTasks);
+            try
+            {
+                /* TODO:
+                 * Catch System.AggregateException and log all inner exceptions
+                 */
+                Task.WaitAll(pocketQueryTasks);
+            } catch (SqlException e)
+            {
+                Console.WriteLine(e.ToString());
+            }
 
             if (Debugger.IsAttached)
             {

@@ -57,34 +57,7 @@ namespace Geocaching
             }
 
             base.Retry(() => Add(geocache, ++attempt, add), () => Update(geocache), ++attempt, 3, add);
-            //bool ok = false;
-            //while (!ok)
-            //{
-            //    try
-            //    {
-            //        add.ExecuteNonQuery();
-            //        ok = true;
-            //    }
-            //    catch (SqlException e)
-            //    {
-            //        if (e.Number == 1205) //Deadlock
-            //        {
-            //            Console.WriteLine($"Attempting to Add {geocache.CacheID}, attempt {attempt++}");
-            //            //System.Threading.Thread.Sleep(new Random().Next(5000));
-            //            Add(geocache, attempt, add);
-            //        }
 
-            //        //TODO document what these numbers refer to...
-            //        else if (e.Number == 2627 || e.Number == 2601)
-            //        {
-            //            Console.WriteLine($"Geocache: Duplicate Key {geocache.CacheID}");
-            //            Update(geocache);
-            //            ok = true;          // Required, will loop infinitely..
-            //        }
-            //        else
-            //            throw;
-            //    }
-            //}
             return geocache;
         }
 
@@ -160,26 +133,7 @@ namespace Geocaching
             }
             
             base.Retry(() => Update(geocache, ++attempt, update), () => Update(geocache), ++attempt, 3, update);
-            //bool ok = false;
-            //while (!ok)
-            //{
-            //    try
-            //    {
-            //        update.ExecuteNonQuery();
-            //        ok = true;
-            //    }
-            //    catch (SqlException e)
-            //    {
-            //        if (e.Number == 1205) //Deadlock
-            //        {
-            //            Console.WriteLine($"Attempting to Update {geocache.CacheID}, attempt {attempt++}");
-            //            //System.Threading.Thread.Sleep(new Random().Next(5000));
-            //            Update(geocache, attempt, update);
-            //        }
-            //        else
-            //            throw;
-            //    }
-            //}
+
             return geocache;
         }
 

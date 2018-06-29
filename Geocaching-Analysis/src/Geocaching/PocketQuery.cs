@@ -223,7 +223,6 @@ namespace Geocaching
             dataReader = command.ExecuteReader();
             var logDataTable = new DataTable();
 
-            //TODO handle 1205 -- deadlock
             loadOkay = false;
             while (loadOkay != true)
             {

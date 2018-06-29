@@ -41,36 +41,6 @@ namespace Geocaching
             //TODO: we should have already checked for existance in database previously, however, we still might need to run update if a deadlock occurs on Add.
             base.Retry(() => Add(log, ++attempt, add), () => Update(log), ++attempt, 3, add);
 
-
-            //bool ok = false;
-            //while (!ok)
-            //{
-            //    try
-            //    {
-            //        add.ExecuteNonQuery();
-            //        ok = true;
-            //    }
-            //    catch (SqlException e)
-            //    {
-            //        if (e.Number == 1205) //Deadlock
-            //        {
-            //            Console.WriteLine($"Attempting to Add {log.GeocacheID}, attempt {attempt++}");
-            //            //System.Threading.Thread.Sleep(new Random().Next(5000));
-            //            Add(log, attempt, add);
-            //        }
-
-            //        //TODO document what these numbers mean..
-            //        else if (e.Number == 2627 || e.Number == 2601)
-            //        {
-            //            Console.WriteLine($"Log: Duplicate Key: {log.ID}");
-            //            Update(log);
-            //            ok = true;          // Required, will loop infinitely..
-            //        }
-            //        else
-            //            throw;
-            //    }
-            //}
-
             return log;
         }
 
@@ -134,26 +104,7 @@ namespace Geocaching
                 update.CommandTimeout = 0;
             }
             base.Retry(() => Update(log, ++attempt, update), () => Update(log), ++attempt, 3, update);
-            //bool ok = false;
-            //while (!ok)
-            //{
-            //    try
-            //    {
-            //        update.ExecuteNonQuery();
-            //        ok = true;
-            //    }
-            //    catch (SqlException e)
-            //    {
-            //        if (e.Number == 1205) //Deadlock
-            //        {
-            //            Console.WriteLine($"Attempting to Update {log.GeocacheID}, attempt {attempt++}");
-            //            //System.Threading.Thread.Sleep(new Random().Next(5000));
-            //            Update(log, attempt, update);
-            //        }
-            //        else
-            //            throw;
-            //    }
-            //}
+
             return log;
         }
 

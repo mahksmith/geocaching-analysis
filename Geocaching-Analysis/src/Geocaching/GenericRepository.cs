@@ -19,7 +19,7 @@ namespace Geocaching
             //var retryCount = 0;
             var ok = false;
 
-            while (ok != true && currentRetry < maxRetries)
+            while (ok != true && currentRetry <= maxRetries)
             {
                 try
                 {
@@ -28,18 +28,35 @@ namespace Geocaching
                 }
                 catch (SqlException e)
                 {
-                    if (e.Number == 1205)
-                    { //Deadlock
-                        System.Threading.Thread.Sleep(new Random().Next(1000));
-                        repositoryAddMethod();
-                        ok = true;
-                    }
-                    else if (e.Number == 2627 || e.Number == 2601)
+                    switch (e.Number)
                     {
-                        repositoryUpdateMethod();
+                        case 1205:
+                            // Deadlock
+                            System.Threading.Thread.Sleep(new Random().Next(60 * 1000));
+                            repositoryAddMethod();
+                            ok = true;
+                            break;
+
+                        case 2601:
+                        case 2627:
+                            // Duplicate Keys
+                            repositoryUpdateMethod();
+                            ok = true;
+                            break;
+
+                        case -2:
+                            // Query Timeout
+                            var sleep = new Random().Next(60 * 1000);
+                            Console.WriteLine("Sleeping Query %1", sleep);
+                            System.Threading.Thread.Sleep(new Random().Next(60 * 1000));
+                            currentRetry++;
+                            break;
                     }
-                    else
+
+                    if (currentRetry == maxRetries)
+                    {
                         throw;
+                    }
                 }
             }
 
